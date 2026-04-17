@@ -1,35 +1,48 @@
 import { buscarPerguntasML } from "../services/mercadolivre.service";
 import { enviarTelegram } from "../services/telegram.service";
 
-let ultimoId: string | null = null;
+let ultimoIdPergunta: string | null = null;
 
 export const monitorarPerguntas = async () => {
   const perguntas = await buscarPerguntasML();
 
-  if (!perguntas.length) return;
+  if (!perguntas.length) {
+    console.log("Nenhuma pergunta não respondida encontrada.");
+    return;
+  }
 
-  const ordenadas = perguntas.sort(
+  const perguntasOrdenadas = perguntas.sort(
     (a: any, b: any) =>
       new Date(b.date_created).getTime() -
       new Date(a.date_created).getTime()
   );
 
-  const maisRecente = ordenadas[0];
+  const perguntaMaisRecente = perguntasOrdenadas[0];
+  const idAtual = String(perguntaMaisRecente.id);
 
-  console.log("Pergunta mais recente:", maisRecente.id, maisRecente.text);
+  console.log("Pergunta mais recente encontrada:");
+  console.log("ID:", idAtual);
+  console.log("Texto:", perguntaMaisRecente.text);
+  console.log("Status:", perguntaMaisRecente.status);
 
-  if (!ultimoId) {
-    ultimoId = String(maisRecente.id);
+  if (!ultimoIdPergunta) {
+    ultimoIdPergunta = idAtual;
+    console.log("Primeira execução. ID salvo sem enviar notificação.");
     return;
   }
 
-  if (String(maisRecente.id) !== ultimoId) {
-    ultimoId = String(maisRecente.id);
+  if (idAtual !== ultimoIdPergunta) {
+    ultimoIdPergunta = idAtual;
 
-    await enviarTelegram(
-      `❓ Love Eletro: NOVA PERGUNTA\n${maisRecente.text}`
-    );
+    const mensagem = [
+      "❓ Love Eletro: NOVA PERGUNTA",
+      `Pergunta: ${perguntaMaisRecente.text}`,
+    ].join("\n");
 
-    console.log("Nova pergunta detectada e enviada!");
+    await enviarTelegram(mensagem);
+
+    console.log("Nova pergunta detectada e enviada ao Telegram.");
+  } else {
+    console.log("Nenhuma nova pergunta detectada.");
   }
 };
