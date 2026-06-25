@@ -2,6 +2,7 @@ import { buscarPerguntasML } from "../services/mercadolivre/questions.service";
 import { enviarTelegram } from "../services/telegram/telegram.service";
 import { monitorStateRepository } from "../modules/monitor-state";
 import { eventRepository } from "../modules/events";
+import { telegramNotificationRepository } from "../modules/telegram-notifications";
 
 const LAST_QUESTION_ID_STATE_KEY = "last_question_id";
 
@@ -43,7 +44,7 @@ export const monitorarPerguntas = async () => {
   monitorPerguntasInicializado = true;
 
   if (idAtual !== ultimoIdPergunta) {
-    await eventRepository.createEvent({
+    const event = await eventRepository.createEvent({
       event_type: "QUESTION_CREATED",
       source_id: idAtual,
       payload: perguntaMaisRecente,
@@ -56,9 +57,19 @@ export const monitorarPerguntas = async () => {
       `Pergunta: ${perguntaMaisRecente.text}`,
     ].join("\n");
 
-    await enviarTelegram(mensagem);
+    const telegramEnviado = await enviarTelegram(mensagem);
 
-    console.log("Nova pergunta detectada e enviada ao Telegram.");
+    if (telegramEnviado) {
+      await telegramNotificationRepository.createNotification({
+        event_id: event.id,
+        message: mensagem,
+      });
+
+      console.log("Nova pergunta detectada e enviada ao Telegram.");
+      return;
+    }
+
+    console.log("Nova pergunta detectada, mas o envio ao Telegram falhou.");
   } else {
     console.log("Nenhuma nova pergunta detectada.");
   }

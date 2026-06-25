@@ -1,7 +1,7 @@
 import axios from "axios";
 import { env } from "../../config/env";
 
-export const enviarTelegram = async (mensagem: string) => {
+export const enviarTelegram = async (mensagem: string): Promise<boolean> => {
   try {
     const url = `https://api.telegram.org/bot${env.TELEGRAM_TOKEN}/sendMessage`;
 
@@ -11,6 +11,7 @@ export const enviarTelegram = async (mensagem: string) => {
     });
 
     console.log("Telegram enviado com sucesso:", response.data.ok);
+    return response.data.ok === true;
   } catch (error: any) {
     console.error("Erro ao enviar mensagem para o Telegram:");
 
@@ -20,5 +21,7 @@ export const enviarTelegram = async (mensagem: string) => {
     } else {
       console.error(error.message);
     }
+
+    return false;
   }
 };

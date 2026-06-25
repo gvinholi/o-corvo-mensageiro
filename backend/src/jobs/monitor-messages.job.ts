@@ -1,6 +1,7 @@
 import { buscarPedidosML } from "../services/mercadolivre/orders.service";
 import { buscarMensagensPorPedido } from "../services/mercadolivre/messages.service";
 import { enviarTelegram } from "../services/telegram/telegram.service";
+import { telegramNotificationRepository } from "../modules/telegram-notifications";
 
 let ultimoIdMensagem: string | null = null;
 let monitorMensagensInicializado = false;
@@ -40,10 +41,18 @@ export const monitorarMensagens = async () => {
   if (idMensagem !== ultimoIdMensagem) {
     ultimoIdMensagem = idMensagem;
 
-    await enviarTelegram(
-      `💬 Love Eletro: NOVA MENSAGEM\n${ultimaMensagem.text}`
-    );
+    const mensagem = `💬 Love Eletro: NOVA MENSAGEM\n${ultimaMensagem.text}`;
+    const telegramEnviado = await enviarTelegram(mensagem);
 
-    console.log("Nova mensagem enviada ao Telegram.");
+    if (telegramEnviado) {
+      await telegramNotificationRepository.createNotification({
+        message: mensagem,
+      });
+
+      console.log("Nova mensagem enviada ao Telegram.");
+      return;
+    }
+
+    console.log("Nova mensagem detectada, mas o envio ao Telegram falhou.");
   }
 };
