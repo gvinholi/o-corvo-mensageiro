@@ -33,15 +33,35 @@ export const eventRepository: EventRepository = {
 
     const { data, error } = await supabase
       .from(TABLE_NAME)
-      .insert(eventToCreate)
+      .upsert(eventToCreate, {
+        onConflict: "event_type,source_id",
+        ignoreDuplicates: true,
+      })
       .select("id, event_type, source_id, payload, created_at")
-      .single<Event>();
+      .maybeSingle<Event>();
 
     if (error) {
       throw new Error(`Erro ao criar evento: ${error.message}`);
     }
 
-    return data;
+    if (data) {
+      return data;
+    }
+
+    const { data: existingEvent, error: existingEventError } = await supabase
+      .from(TABLE_NAME)
+      .select("id, event_type, source_id, payload, created_at")
+      .eq("event_type", input.event_type)
+      .eq("source_id", input.source_id)
+      .single<Event>();
+
+    if (existingEventError) {
+      throw new Error(
+        `Erro ao buscar evento existente: ${existingEventError.message}`
+      );
+    }
+
+    return existingEvent;
   },
 
   async getEvents(filters: GetEventsFilters = {}): Promise<Event[]> {
