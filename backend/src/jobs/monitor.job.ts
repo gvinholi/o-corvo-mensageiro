@@ -1,13 +1,15 @@
-import { buscarPerguntasML } from "../services/mercadolivre.service";
-import { enviarTelegram } from "../services/telegram.service";
+import { buscarPerguntasML } from "../services/mercadolivre/questions.service";
+import { enviarTelegram } from "../services/telegram/telegram.service";
 
 let ultimoIdPergunta: string | null = null;
+let monitorPerguntasInicializado = false;
 
 export const monitorarPerguntas = async () => {
   const perguntas = await buscarPerguntasML();
 
   if (!perguntas.length) {
     console.log("Nenhuma pergunta não respondida encontrada.");
+    monitorPerguntasInicializado = true;
     return;
   }
 
@@ -25,8 +27,9 @@ export const monitorarPerguntas = async () => {
   console.log("Texto:", perguntaMaisRecente.text);
   console.log("Status:", perguntaMaisRecente.status);
 
-  if (!ultimoIdPergunta) {
+  if (!monitorPerguntasInicializado) {
     ultimoIdPergunta = idAtual;
+    monitorPerguntasInicializado = true;
     console.log("Primeira execução. ID salvo sem enviar notificação.");
     return;
   }
