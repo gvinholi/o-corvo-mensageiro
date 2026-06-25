@@ -1,11 +1,16 @@
 import { buscarPerguntasML } from "../services/mercadolivre/questions.service";
 import { enviarTelegram } from "../services/telegram/telegram.service";
+import { monitorStateRepository } from "../modules/monitor-state";
 
-let ultimoIdPergunta: string | null = null;
+const LAST_QUESTION_ID_STATE_KEY = "last_question_id";
+
 let monitorPerguntasInicializado = false;
 
 export const monitorarPerguntas = async () => {
   const perguntas = await buscarPerguntasML();
+  const ultimoIdPergunta = await monitorStateRepository.getState(
+    LAST_QUESTION_ID_STATE_KEY
+  );
 
   if (!perguntas.length) {
     console.log("Nenhuma pergunta não respondida encontrada.");
@@ -27,15 +32,17 @@ export const monitorarPerguntas = async () => {
   console.log("Texto:", perguntaMaisRecente.text);
   console.log("Status:", perguntaMaisRecente.status);
 
-  if (!monitorPerguntasInicializado) {
-    ultimoIdPergunta = idAtual;
+  if (!monitorPerguntasInicializado && !ultimoIdPergunta) {
+    await monitorStateRepository.saveState(LAST_QUESTION_ID_STATE_KEY, idAtual);
     monitorPerguntasInicializado = true;
     console.log("Primeira execução. ID salvo sem enviar notificação.");
     return;
   }
 
+  monitorPerguntasInicializado = true;
+
   if (idAtual !== ultimoIdPergunta) {
-    ultimoIdPergunta = idAtual;
+    await monitorStateRepository.saveState(LAST_QUESTION_ID_STATE_KEY, idAtual);
 
     const mensagem = [
       "❓ Love Eletro: NOVA PERGUNTA",
