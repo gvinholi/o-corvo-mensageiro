@@ -27,16 +27,16 @@ export function useHealthStatus() {
   const [state, setState] = useState<UseHealthStatusState>(initialState);
 
   useEffect(() => {
+    let isMounted = true;
     let timeoutId: number | undefined;
     let abortController: AbortController | null = null;
 
     async function fetchHealthStatus() {
-      abortController?.abort();
       abortController = new AbortController();
 
       setState((currentState) => ({
         ...currentState,
-        loading: true,
+        loading: currentState.services.every((service) => !service.lastUpdated),
         error: null,
       }));
 
@@ -44,6 +44,10 @@ export function useHealthStatus() {
 
       try {
         const health = await getHealthStatus(abortController.signal);
+
+        if (!isMounted) {
+          return;
+        }
 
         setState({
           services: [
@@ -71,7 +75,7 @@ export function useHealthStatus() {
           error: null,
         });
       } catch (error) {
-        if (abortController.signal.aborted) {
+        if (!isMounted || abortController.signal.aborted) {
           return;
         }
 
@@ -84,16 +88,19 @@ export function useHealthStatus() {
               : "Erro desconhecido ao consultar healthcheck.",
         });
       } finally {
-        timeoutId = window.setTimeout(
-          fetchHealthStatus,
-          HEALTH_REFRESH_INTERVAL_MS
-        );
+        if (isMounted) {
+          timeoutId = window.setTimeout(
+            fetchHealthStatus,
+            HEALTH_REFRESH_INTERVAL_MS
+          );
+        }
       }
     }
 
     fetchHealthStatus();
 
     return () => {
+      isMounted = false;
       abortController?.abort();
       window.clearTimeout(timeoutId);
     };

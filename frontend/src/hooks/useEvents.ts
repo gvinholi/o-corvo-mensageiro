@@ -6,6 +6,8 @@ import type {
   PaginatedEventsResponse,
 } from "../types/event";
 
+const EVENTS_REFRESH_INTERVAL_MS = 30000;
+
 interface UseEventsState {
   events: Event[];
   page: number;
@@ -40,17 +42,25 @@ export function useEvents(params: GetEventsParams = {}) {
   const [state, setState] = useState<UseEventsState>(initialState);
 
   useEffect(() => {
-    const abortController = new AbortController();
+    let isMounted = true;
+    let timeoutId: number | undefined;
+    let abortController: AbortController | null = null;
 
     async function fetchEvents() {
+      abortController = new AbortController();
+
       setState((currentState) => ({
         ...currentState,
-        loading: true,
+        loading: currentState.events.length === 0,
         error: null,
       }));
 
       try {
         const response = await getEvents(params, abortController.signal);
+
+        if (!isMounted) {
+          return;
+        }
 
         setState({
           ...mapResponseToState(response),
@@ -58,7 +68,7 @@ export function useEvents(params: GetEventsParams = {}) {
           error: null,
         });
       } catch (error) {
-        if (abortController.signal.aborted) {
+        if (!isMounted || abortController.signal.aborted) {
           return;
         }
 
@@ -70,13 +80,22 @@ export function useEvents(params: GetEventsParams = {}) {
               ? error.message
               : "Erro desconhecido ao buscar eventos.",
         }));
+      } finally {
+        if (isMounted) {
+          timeoutId = window.setTimeout(
+            fetchEvents,
+            EVENTS_REFRESH_INTERVAL_MS
+          );
+        }
       }
     }
 
     fetchEvents();
 
     return () => {
-      abortController.abort();
+      isMounted = false;
+      abortController?.abort();
+      window.clearTimeout(timeoutId);
     };
   }, [params.page, params.limit]);
 
