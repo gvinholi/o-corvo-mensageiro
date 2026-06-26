@@ -1,3 +1,4 @@
+import { EventTimeline } from "../components/EventTimeline";
 import { IndicatorCard } from "../components/IndicatorCard";
 import { useEvents } from "../hooks/useEvents";
 import { buildOperationMetrics } from "../utils/dashboardMetrics";
@@ -50,21 +51,7 @@ export function Dashboard() {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
-        <article className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-          <h3 className="text-lg font-semibold text-white">
-            Área preparada para métricas
-          </h3>
-          <div className="mt-6 flex h-56 items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-slate-950 text-center">
-            <div>
-              <p className="text-sm font-medium text-slate-300">
-                Gráficos e indicadores entram aqui
-              </p>
-              <p className="mt-2 text-sm text-slate-500">
-                A estrutura visual já está pronta para receber dados reais.
-              </p>
-            </div>
-          </div>
-        </article>
+        <EventTimeline events={events} loading={loading} />
 
         <article className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
           <h3 className="text-lg font-semibold text-white">Próximas telas</h3>
