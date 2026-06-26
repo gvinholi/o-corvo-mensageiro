@@ -1,8 +1,8 @@
 import { eventRepository } from "./event.repository";
-import { Event } from "./event.types";
+import { GetEventsFilters, PaginatedEvents } from "./event.types";
 
 export const eventService = {
-  async getEvents(): Promise<Event[]> {
-    return eventRepository.getEvents();
+  async getEvents(filters: GetEventsFilters): Promise<PaginatedEvents> {
+    return eventRepository.getEvents(filters);
   },
 };

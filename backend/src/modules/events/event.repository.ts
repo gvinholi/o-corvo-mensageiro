@@ -5,6 +5,7 @@ import {
   Event,
   EventRepository,
   GetEventsFilters,
+  PaginatedEvents,
 } from "./event.types";
 
 const TABLE_NAME = "events";
@@ -64,12 +65,19 @@ export const eventRepository: EventRepository = {
     return existingEvent;
   },
 
-  async getEvents(filters: GetEventsFilters = {}): Promise<Event[]> {
+  async getEvents(filters: GetEventsFilters = {}): Promise<PaginatedEvents> {
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? DEFAULT_EVENTS_LIMIT;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
     let query = supabase
       .from(TABLE_NAME)
-      .select("id, event_type, source_id, payload, created_at")
+      .select("id, event_type, source_id, payload, created_at", {
+        count: "exact",
+      })
       .order("created_at", { ascending: false })
-      .limit(filters.limit ?? DEFAULT_EVENTS_LIMIT);
+      .range(from, to);
 
     if (filters.event_type) {
       query = query.eq("event_type", filters.event_type);
@@ -79,12 +87,20 @@ export const eventRepository: EventRepository = {
       query = query.eq("source_id", filters.source_id);
     }
 
-    const { data, error } = await query.returns<Event[]>();
+    const { data, error, count } = await query.returns<Event[]>();
 
     if (error) {
       throw new Error(`Erro ao buscar eventos: ${error.message}`);
     }
 
-    return data ?? [];
+    const total = count ?? 0;
+
+    return {
+      data: data ?? [],
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    };
   },
 };

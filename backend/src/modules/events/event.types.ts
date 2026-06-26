@@ -24,10 +24,19 @@ export interface CreateEventInput {
 export interface GetEventsFilters {
   event_type?: EventType;
   source_id?: string;
+  page?: number;
   limit?: number;
+}
+
+export interface PaginatedEvents {
+  data: Event[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
 }
 
 export interface EventRepository {
   createEvent(input: CreateEventInput): Promise<Event>;
-  getEvents(filters?: GetEventsFilters): Promise<Event[]>;
+  getEvents(filters?: GetEventsFilters): Promise<PaginatedEvents>;
 }

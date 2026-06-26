@@ -7,4 +7,5 @@ export type {
   EventRepository,
   EventType,
   GetEventsFilters,
+  PaginatedEvents,
 } from "./event.types";
