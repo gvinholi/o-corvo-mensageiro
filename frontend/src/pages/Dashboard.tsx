@@ -1,22 +1,22 @@
 import { useState } from "react";
 import { EventTimeline } from "../components/EventTimeline";
 import { FilterBar } from "../components/FilterBar";
+import { HealthStatusPanel } from "../components/HealthStatusPanel";
 import { IndicatorCard } from "../components/IndicatorCard";
 import { useEvents } from "../hooks/useEvents";
+import { useHealthStatus } from "../hooks/useHealthStatus";
 import { buildOperationMetrics } from "../utils/dashboardMetrics";
 import { filterEventsByType } from "../utils/eventGroups";
 import type { EventFilter } from "../utils/eventGroups";
 
-const nextSections = [
-  "Histórico de eventos",
-  "Auditoria de notificações",
-  "Status dos serviços",
-  "Configurações dos monitores",
-];
-
 export function Dashboard() {
   const [activeFilter, setActiveFilter] = useState<EventFilter>("all");
   const { events, loading, error } = useEvents({ limit: 100 });
+  const {
+    services,
+    loading: healthLoading,
+    error: healthError,
+  } = useHealthStatus();
   const operationMetrics = buildOperationMetrics(events);
   const filteredEvents = filterEventsByType(events, activeFilter);
 
@@ -64,19 +64,11 @@ export function Dashboard() {
       <section className="grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
         <EventTimeline events={filteredEvents} loading={loading} />
 
-        <article className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-          <h3 className="text-lg font-semibold text-white">Próximas telas</h3>
-          <ul className="mt-5 space-y-3">
-            {nextSections.map((section) => (
-              <li
-                key={section}
-                className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-slate-300"
-              >
-                {section}
-              </li>
-            ))}
-          </ul>
-        </article>
+        <HealthStatusPanel
+          services={services}
+          loading={healthLoading}
+          error={healthError}
+        />
       </section>
     </div>
   );
