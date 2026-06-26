@@ -1,9 +1,13 @@
+import { useEffect, useRef } from "react";
 import type { Event, EventPayload, EventType } from "../types/event";
 import { Skeleton } from "./Skeleton";
 
 interface EventTimelineProps {
   events: Event[];
   loading?: boolean;
+  loadingMore?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 interface EventTimelineStyle {
@@ -102,11 +106,74 @@ const getEventDescription = (event: Event) => {
   return `Evento ${event.source_id} registrado no sistema.`;
 };
 
-export function EventTimeline({ events, loading = false }: EventTimelineProps) {
+function LoadMoreControls({
+  hasMore,
+  loadingMore,
+  onLoadMore,
+}: Pick<EventTimelineProps, "hasMore" | "loadingMore" | "onLoadMore">) {
+  if (!hasMore) {
+    return (
+      <p className="mt-6 text-center text-sm text-slate-500">
+        Todos os eventos carregados.
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-6 flex justify-center">
+      <button
+        type="button"
+        onClick={onLoadMore}
+        disabled={loadingMore}
+        className="rounded-xl border border-slate-700 bg-slate-950 px-5 py-3 text-sm font-medium text-slate-200 transition hover:border-sky-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {loadingMore ? "Carregando..." : "Carregar mais"}
+      </button>
+    </div>
+  );
+}
+
+export function EventTimeline({
+  events,
+  loading = false,
+  loadingMore = false,
+  hasMore = false,
+  onLoadMore,
+}: EventTimelineProps) {
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const sortedEvents = [...events].sort(
     (a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
+
+  useEffect(() => {
+    if (!hasMore || loading || loadingMore || !onLoadMore) {
+      return;
+    }
+
+    const target = loadMoreRef.current;
+
+    if (!target) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          onLoadMore();
+        }
+      },
+      {
+        rootMargin: "300px",
+      }
+    );
+
+    observer.observe(target);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, loading, loadingMore, onLoadMore]);
 
   if (loading) {
     return (
@@ -154,6 +221,13 @@ export function EventTimeline({ events, loading = false }: EventTimelineProps) {
             Os logs aparecerão aqui assim que os monitores registrarem eventos.
           </p>
         </div>
+
+        <div ref={loadMoreRef} />
+        <LoadMoreControls
+          hasMore={hasMore}
+          loadingMore={loadingMore}
+          onLoadMore={onLoadMore}
+        />
       </div>
     );
   }
@@ -214,6 +288,27 @@ export function EventTimeline({ events, loading = false }: EventTimelineProps) {
           );
         })}
       </ol>
+
+      {loadingMore && (
+        <div className="mt-6 space-y-5">
+          {[0, 1].map((item) => (
+            <div key={item} className="relative pl-10">
+              <Skeleton className="absolute left-0 top-1 h-7 w-7 rounded-full" />
+              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                <Skeleton className="h-5 w-24 rounded-full" />
+                <Skeleton className="mt-4 h-4 w-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div ref={loadMoreRef} />
+      <LoadMoreControls
+        hasMore={hasMore}
+        loadingMore={loadingMore}
+        onLoadMore={onLoadMore}
+      />
     </article>
   );
 }

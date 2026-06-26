@@ -11,7 +11,14 @@ import type { EventFilter } from "../utils/eventGroups";
 
 export function Dashboard() {
   const [activeFilter, setActiveFilter] = useState<EventFilter>("all");
-  const { events, loading, error } = useEvents({ limit: 100 });
+  const {
+    events,
+    loading,
+    loadingMore,
+    hasMore,
+    error,
+    loadMore,
+  } = useEvents({ limit: 100 });
   const {
     services,
     loading: healthLoading,
@@ -63,7 +70,13 @@ export function Dashboard() {
       />
 
       <section className="grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
-        <EventTimeline events={filteredEvents} loading={loading} />
+        <EventTimeline
+          events={filteredEvents}
+          loading={loading}
+          loadingMore={loadingMore}
+          hasMore={hasMore}
+          onLoadMore={loadMore}
+        />
 
         <HealthStatusPanel
           services={services}

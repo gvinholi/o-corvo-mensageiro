@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getEvents } from "../services/events.service";
 import type {
   Event,
   GetEventsParams,
-  PaginatedEventsResponse,
 } from "../types/event";
 
 const EVENTS_REFRESH_INTERVAL_MS = 30000;
@@ -15,6 +14,8 @@ interface UseEventsState {
   total: number;
   totalPages: number;
   loading: boolean;
+  loadingMore: boolean;
+  refreshing: boolean;
   error: string | null;
 }
 
@@ -25,79 +26,148 @@ const initialState: UseEventsState = {
   total: 0,
   totalPages: 0,
   loading: true,
+  loadingMore: false,
+  refreshing: false,
   error: null,
 };
 
-const mapResponseToState = (
-  response: PaginatedEventsResponse
-): Omit<UseEventsState, "loading" | "error"> => ({
-  events: response.data,
-  page: response.page,
-  limit: response.limit,
-  total: response.total,
-  totalPages: response.totalPages,
-});
+const mergeUniqueEvents = (currentEvents: Event[], newEvents: Event[]) => {
+  const eventsById = new Map<string, Event>();
+
+  [...currentEvents, ...newEvents].forEach((event) => {
+    eventsById.set(event.id, event);
+  });
+
+  return Array.from(eventsById.values()).sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+};
 
 export function useEvents(params: GetEventsParams = {}) {
   const [state, setState] = useState<UseEventsState>(initialState);
+  const isMountedRef = useRef(false);
+  const inFlightRef = useRef(false);
+  const timeoutRef = useRef<number | undefined>(undefined);
+  const abortControllersRef = useRef<Set<AbortController>>(new Set());
 
-  useEffect(() => {
-    let isMounted = true;
-    let timeoutId: number | undefined;
-    let abortController: AbortController | null = null;
+  const limit = params.limit ?? 50;
 
-    async function fetchEvents() {
-      abortController = new AbortController();
+  const fetchPage = useCallback(
+    async (page: number, mode: "refresh" | "append") => {
+      if (inFlightRef.current) {
+        return;
+      }
+
+      inFlightRef.current = true;
+
+      const abortController = new AbortController();
+      abortControllersRef.current.add(abortController);
 
       setState((currentState) => ({
         ...currentState,
-        loading: currentState.events.length === 0,
+        loading:
+          mode === "refresh" &&
+          currentState.events.length === 0 &&
+          currentState.page === 1,
+        refreshing: mode === "refresh" && currentState.events.length > 0,
+        loadingMore: mode === "append",
         error: null,
       }));
 
       try {
-        const response = await getEvents(params, abortController.signal);
+        const response = await getEvents(
+          {
+            page,
+            limit,
+          },
+          abortController.signal
+        );
 
-        if (!isMounted) {
+        if (!isMountedRef.current) {
           return;
         }
 
-        setState({
-          ...mapResponseToState(response),
-          loading: false,
-          error: null,
+        setState((currentState) => {
+          const events =
+            mode === "append"
+              ? mergeUniqueEvents(currentState.events, response.data)
+              : mergeUniqueEvents(response.data, currentState.events);
+
+          return {
+            events,
+            page: Math.max(currentState.page, response.page),
+            limit: response.limit,
+            total: response.total,
+            totalPages: response.totalPages,
+            loading: false,
+            loadingMore: false,
+            refreshing: false,
+            error: null,
+          };
         });
       } catch (error) {
-        if (!isMounted || abortController.signal.aborted) {
+        if (!isMountedRef.current || abortController.signal.aborted) {
           return;
         }
 
         setState((currentState) => ({
           ...currentState,
           loading: false,
+          loadingMore: false,
+          refreshing: false,
           error:
             error instanceof Error
               ? error.message
               : "Erro desconhecido ao buscar eventos.",
         }));
       } finally {
-        if (isMounted) {
-          timeoutId = window.setTimeout(
-            fetchEvents,
-            EVENTS_REFRESH_INTERVAL_MS
-          );
-        }
+        inFlightRef.current = false;
+        abortControllersRef.current.delete(abortController);
+      }
+    },
+    [limit]
+  );
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    setState(initialState);
+
+    async function refreshEvents() {
+      await fetchPage(1, "refresh");
+
+      if (isMountedRef.current) {
+        timeoutRef.current = window.setTimeout(
+          refreshEvents,
+          EVENTS_REFRESH_INTERVAL_MS
+        );
       }
     }
 
-    fetchEvents();
+    refreshEvents();
 
     return () => {
-      isMounted = false;
-      abortController?.abort();
-      window.clearTimeout(timeoutId);
+      isMountedRef.current = false;
+      window.clearTimeout(timeoutRef.current);
+      abortControllersRef.current.forEach((abortController) =>
+        abortController.abort()
+      );
+      abortControllersRef.current.clear();
+      inFlightRef.current = false;
     };
-  }, [params.page, params.limit]);
+  }, [fetchPage]);
 
-  return state;
+  const loadMore = useCallback(async () => {
+    if (state.loading || state.loadingMore || state.page >= state.totalPages) {
+      return;
+    }
+
+    await fetchPage(state.page + 1, "append");
+  }, [fetchPage, state.loading, state.loadingMore, state.page, state.totalPages]);
+
+  return {
+    ...state,
+    hasMore: state.page < state.totalPages,
+    loadMore,
+  };
 }
