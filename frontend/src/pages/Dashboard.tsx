@@ -38,8 +38,9 @@ export function Dashboard() {
       </section>
 
       {error && (
-        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-sm text-red-200">
-          Não foi possível carregar os indicadores: {error}
+        <div className="animate-fade-in-up rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-sm text-red-200 shadow-lg shadow-red-950/20">
+          <p className="font-semibold">Não foi possível carregar os eventos.</p>
+          <p className="mt-1 text-red-200/80">{error}</p>
         </div>
       )}
 

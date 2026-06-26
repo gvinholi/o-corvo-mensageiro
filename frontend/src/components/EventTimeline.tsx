@@ -1,4 +1,5 @@
 import type { Event, EventPayload, EventType } from "../types/event";
+import { Skeleton } from "./Skeleton";
 
 interface EventTimelineProps {
   events: Event[];
@@ -109,26 +110,56 @@ export function EventTimeline({ events, loading = false }: EventTimelineProps) {
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-        <h3 className="text-lg font-semibold text-white">Timeline de eventos</h3>
-        <p className="mt-4 text-sm text-slate-400">Carregando eventos...</p>
+      <div className="animate-fade-in-up rounded-2xl border border-slate-800 bg-slate-900 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-white">
+              Timeline de eventos
+            </h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Carregando logs operacionais...
+            </p>
+          </div>
+          <Skeleton className="h-8 w-24 rounded-full" />
+        </div>
+
+        <div className="mt-6 space-y-5">
+          {[0, 1, 2].map((item) => (
+            <div key={item} className="relative pl-10">
+              <Skeleton className="absolute left-0 top-1 h-7 w-7 rounded-full" />
+              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                <Skeleton className="h-5 w-24 rounded-full" />
+                <Skeleton className="mt-4 h-4 w-full" />
+                <Skeleton className="mt-2 h-4 w-2/3" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   if (!sortedEvents.length) {
     return (
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+      <div className="animate-fade-in-up rounded-2xl border border-slate-800 bg-slate-900 p-6">
         <h3 className="text-lg font-semibold text-white">Timeline de eventos</h3>
-        <p className="mt-4 text-sm text-slate-400">
-          Nenhum evento registrado até o momento.
-        </p>
+        <div className="mt-6 rounded-2xl border border-dashed border-slate-700 bg-slate-950 px-5 py-10 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-800 text-xl text-slate-400">
+            i
+          </div>
+          <p className="mt-4 text-sm font-medium text-slate-300">
+            Nenhum evento encontrado
+          </p>
+          <p className="mt-2 text-sm text-slate-500">
+            Os logs aparecerão aqui assim que os monitores registrarem eventos.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <article className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+    <article className="animate-fade-in-up rounded-2xl border border-slate-800 bg-slate-900 p-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-lg font-semibold text-white">
@@ -155,7 +186,7 @@ export function EventTimeline({ events, loading = false }: EventTimelineProps) {
                 {style.icon}
               </span>
 
-              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4 transition duration-200 hover:border-slate-700 hover:bg-slate-950/80">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <span

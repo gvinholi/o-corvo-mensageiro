@@ -19,7 +19,8 @@ const filterOptions: Array<{
 
 export function FilterBar({ activeFilter, onFilterChange }: FilterBarProps) {
   return (
-    <div className="flex gap-2 overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900 p-2">
+    <div className="animate-fade-in-up rounded-2xl border border-slate-800 bg-slate-900/90 p-2 shadow-xl shadow-slate-950/20">
+      <div className="flex gap-2 overflow-x-auto">
       {filterOptions.map((option) => {
         const isActive = option.value === activeFilter;
 
@@ -29,9 +30,9 @@ export function FilterBar({ activeFilter, onFilterChange }: FilterBarProps) {
             type="button"
             onClick={() => onFilterChange(option.value)}
             className={[
-              "whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition",
+              "whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition duration-200",
               isActive
-                ? "bg-sky-500 text-white"
+                ? "bg-sky-500 text-white shadow-lg shadow-sky-950/30"
                 : "text-slate-400 hover:bg-slate-800 hover:text-white",
             ].join(" ")}
           >
@@ -39,6 +40,7 @@ export function FilterBar({ activeFilter, onFilterChange }: FilterBarProps) {
           </button>
         );
       })}
+      </div>
     </div>
   );
 }
