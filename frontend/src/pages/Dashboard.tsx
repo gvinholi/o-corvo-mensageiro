@@ -1,20 +1,6 @@
-const summaryCards = [
-  {
-    label: "Marketplaces",
-    value: "1",
-    description: "Mercado Livre conectado ao monitoramento",
-  },
-  {
-    label: "Canal de alerta",
-    value: "Telegram",
-    description: "Notificações operacionais para a equipe",
-  },
-  {
-    label: "Banco de dados",
-    value: "Supabase",
-    description: "Eventos e estados persistidos",
-  },
-];
+import { IndicatorCard } from "../components/IndicatorCard";
+import { useEvents } from "../hooks/useEvents";
+import { buildOperationMetrics } from "../utils/dashboardMetrics";
 
 const nextSections = [
   "Histórico de eventos",
@@ -24,6 +10,9 @@ const nextSections = [
 ];
 
 export function Dashboard() {
+  const { events, loading, error } = useEvents({ limit: 100 });
+  const operationMetrics = buildOperationMetrics(events);
+
   return (
     <div className="space-y-8">
       <section className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950 p-6 shadow-2xl shadow-slate-950/40 sm:p-8">
@@ -41,20 +30,22 @@ export function Dashboard() {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        {summaryCards.map((card) => (
-          <article
-            key={card.label}
-            className="rounded-2xl border border-slate-800 bg-slate-900 p-5"
-          >
-            <p className="text-sm text-slate-400">{card.label}</p>
-            <h2 className="mt-3 text-2xl font-semibold text-white">
-              {card.value}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              {card.description}
-            </p>
-          </article>
+      {error && (
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-sm text-red-200">
+          Não foi possível carregar os indicadores: {error}
+        </div>
+      )}
+
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        {operationMetrics.map((metric) => (
+          <IndicatorCard
+            key={metric.key}
+            title={metric.title}
+            quantity={metric.quantity}
+            icon={metric.icon}
+            lastUpdated={metric.lastUpdated}
+            loading={loading}
+          />
         ))}
       </section>
 

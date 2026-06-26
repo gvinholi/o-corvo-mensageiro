@@ -1,9 +1,14 @@
 export type EventType =
   | "QUESTION_CREATED"
+  | "ORDER_CREATED"
+  | "MESSAGE_CREATED"
+  | "CLAIM_CREATED"
+  | "CANCELLATION_CREATED"
   | "question"
   | "order"
   | "message"
-  | "claim";
+  | "claim"
+  | "cancellation";
 
 export type EventPayload = Record<string, unknown> | null;
 
