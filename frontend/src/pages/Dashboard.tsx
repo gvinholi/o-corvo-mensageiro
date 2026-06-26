@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DashboardHeader } from "../components/DashboardHeader";
 import { EventTimeline } from "../components/EventTimeline";
 import { FilterBar } from "../components/FilterBar";
 import { HealthStatusPanel } from "../components/HealthStatusPanel";
@@ -15,6 +16,9 @@ export function Dashboard() {
     events,
     loading,
     loadingMore,
+    refreshing,
+    total,
+    lastSyncedAt,
     hasMore,
     error,
     loadMore,
@@ -28,21 +32,13 @@ export function Dashboard() {
   const filteredEvents = filterEventsByType(events, activeFilter);
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950 p-6 shadow-2xl shadow-slate-950/40 sm:p-8">
-        <div className="max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-sky-400">
-            Visão geral
-          </p>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            Painel administrativo do Corvo Mensageiro
-          </h1>
-          <p className="mt-4 text-base leading-7 text-slate-400">
-            Acompanhe a operação da Love Eletro com uma base preparada para
-            eventos, notificações e indicadores dos canais integrados.
-          </p>
-        </div>
-      </section>
+    <div className="space-y-6 lg:space-y-8">
+      <DashboardHeader
+        totalEvents={total}
+        lastSyncedAt={lastSyncedAt}
+        loading={loading}
+        refreshing={refreshing}
+      />
 
       {error && (
         <div className="animate-fade-in-up rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-sm text-red-200 shadow-lg shadow-red-950/20">
@@ -64,19 +60,21 @@ export function Dashboard() {
         ))}
       </section>
 
-      <FilterBar
-        activeFilter={activeFilter}
-        onFilterChange={setActiveFilter}
-      />
-
       <section className="grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
-        <EventTimeline
-          events={filteredEvents}
-          loading={loading}
-          loadingMore={loadingMore}
-          hasMore={hasMore}
-          onLoadMore={loadMore}
-        />
+        <div className="space-y-4">
+          <FilterBar
+            activeFilter={activeFilter}
+            onFilterChange={setActiveFilter}
+          />
+
+          <EventTimeline
+            events={filteredEvents}
+            loading={loading}
+            loadingMore={loadingMore}
+            hasMore={hasMore}
+            onLoadMore={loadMore}
+          />
+        </div>
 
         <HealthStatusPanel
           services={services}

@@ -17,6 +17,7 @@ interface UseEventsState {
   loadingMore: boolean;
   refreshing: boolean;
   error: string | null;
+  lastSyncedAt: string | null;
 }
 
 const initialState: UseEventsState = {
@@ -29,6 +30,7 @@ const initialState: UseEventsState = {
   loadingMore: false,
   refreshing: false,
   error: null,
+  lastSyncedAt: null,
 };
 
 const mergeUniqueEvents = (currentEvents: Event[], newEvents: Event[]) => {
@@ -104,6 +106,7 @@ export function useEvents(params: GetEventsParams = {}) {
             loadingMore: false,
             refreshing: false,
             error: null,
+            lastSyncedAt: new Date().toISOString(),
           };
         });
       } catch (error) {

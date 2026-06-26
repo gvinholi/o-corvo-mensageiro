@@ -31,9 +31,6 @@ export function HealthStatusPanel({
           <h3 className="text-lg font-semibold text-white">
             Observabilidade
           </h3>
-          <p className="mt-1 text-sm text-slate-500">
-            Atualiza automaticamente a cada 30 segundos.
-          </p>
         </div>
 
         {loading && (
