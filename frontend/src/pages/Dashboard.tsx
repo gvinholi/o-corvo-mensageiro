@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { EventTimeline } from "../components/EventTimeline";
+import { FilterBar } from "../components/FilterBar";
 import { IndicatorCard } from "../components/IndicatorCard";
 import { useEvents } from "../hooks/useEvents";
 import { buildOperationMetrics } from "../utils/dashboardMetrics";
+import { filterEventsByType } from "../utils/eventGroups";
+import type { EventFilter } from "../utils/eventGroups";
 
 const nextSections = [
   "Histórico de eventos",
@@ -11,8 +15,10 @@ const nextSections = [
 ];
 
 export function Dashboard() {
+  const [activeFilter, setActiveFilter] = useState<EventFilter>("all");
   const { events, loading, error } = useEvents({ limit: 100 });
   const operationMetrics = buildOperationMetrics(events);
+  const filteredEvents = filterEventsByType(events, activeFilter);
 
   return (
     <div className="space-y-8">
@@ -50,8 +56,13 @@ export function Dashboard() {
         ))}
       </section>
 
+      <FilterBar
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
+      />
+
       <section className="grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
-        <EventTimeline events={events} loading={loading} />
+        <EventTimeline events={filteredEvents} loading={loading} />
 
         <article className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
           <h3 className="text-lg font-semibold text-white">Próximas telas</h3>

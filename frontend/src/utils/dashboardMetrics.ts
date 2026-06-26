@@ -1,4 +1,5 @@
 import type { Event } from "../types/event";
+import { eventTypeGroups } from "./eventGroups";
 
 export type OperationMetricKey =
   | "questions"
@@ -24,31 +25,31 @@ const metricDefinitions: Array<
     key: "questions",
     title: "Perguntas",
     icon: "?",
-    eventTypes: ["QUESTION_CREATED", "question"],
+    eventTypes: eventTypeGroups.questions,
   },
   {
     key: "orders",
     title: "Pedidos",
     icon: "#",
-    eventTypes: ["ORDER_CREATED", "order"],
+    eventTypes: eventTypeGroups.orders,
   },
   {
     key: "messages",
     title: "Mensagens",
     icon: "@",
-    eventTypes: ["MESSAGE_CREATED", "message"],
+    eventTypes: eventTypeGroups.messages,
   },
   {
     key: "claims",
     title: "Reclamações",
     icon: "!",
-    eventTypes: ["CLAIM_CREATED", "claim"],
+    eventTypes: eventTypeGroups.claims,
   },
   {
     key: "cancellations",
     title: "Cancelamentos",
     icon: "x",
-    eventTypes: ["CANCELLATION_CREATED", "cancellation"],
+    eventTypes: eventTypeGroups.cancellations,
   },
 ];
 
