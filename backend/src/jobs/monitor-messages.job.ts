@@ -17,8 +17,10 @@ export const monitorarMensagens = async () => {
 
   const pedidoMaisRecente = pedidos[0];
   const orderId = pedidoMaisRecente.id;
+  const packId = pedidoMaisRecente.pack_id ?? orderId;
+  const sellerId = pedidoMaisRecente.seller?.id ?? pedidoMaisRecente.seller_id;
 
-  const mensagens = await buscarMensagensPorPedido(orderId);
+  const mensagens = await buscarMensagensPorPedido(orderId, packId, sellerId);
 
   if (!mensagens.length) {
     console.log("Nenhuma mensagem encontrada.");

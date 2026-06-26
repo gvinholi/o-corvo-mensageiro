@@ -1,19 +1,63 @@
 import axios from "axios";
-import { env } from "../../config/env";
+import { obterAccessToken, renovarTokenML } from "./auth.service";
 
-export const buscarMensagensPorPedido = async (orderId: number) => {
-  try {
+const extrairMensagens = (data: any) => {
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  return data.messages || [];
+};
+
+const buscarMensagens = async (
+  orderId: number,
+  packId?: number | null,
+  sellerId?: number | null
+) => {
+  if (packId && sellerId) {
     const response = await axios.get(
-      `https://api.mercadolibre.com/messages/orders/${orderId}`,
+      `https://api.mercadolibre.com/messages/packs/${packId}/sellers/${sellerId}`,
       {
+        params: {
+          tag: "post_sale",
+          mark_as_read: false,
+        },
         headers: {
-          Authorization: `Bearer ${env.ML_ACCESS_TOKEN}`,
+          Authorization: `Bearer ${obterAccessToken()}`,
         },
       }
     );
 
-    return response.data.messages || [];
+    return extrairMensagens(response.data);
+  }
+
+  const response = await axios.get(
+    `https://api.mercadolibre.com/messages/orders/${orderId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${obterAccessToken()}`,
+      },
+    }
+  );
+
+  return extrairMensagens(response.data);
+};
+
+export const buscarMensagensPorPedido = async (
+  orderId: number,
+  packId?: number | null,
+  sellerId?: number | null
+) => {
+  try {
+    return await buscarMensagens(orderId, packId, sellerId);
   } catch (error: any) {
+    if (error.response?.status === 401) {
+      console.log("Token expirado/inválido nas mensagens. Renovando...");
+      await renovarTokenML();
+
+      return await buscarMensagens(orderId, packId, sellerId);
+    }
+
     console.error("Erro ao buscar mensagens do pedido:", orderId);
 
     if (error.response) {
