@@ -1,7 +1,7 @@
 import { buscarPerguntasML } from "../services/mercadolivre/questions.service";
 import { enviarTelegram } from "../services/telegram/telegram.service";
 import { monitorStateRepository } from "../modules/monitor-state";
-import { eventRepository } from "../modules/events";
+import { eventProcessor } from "../modules/event-processor";
 import { telegramNotificationRepository } from "../modules/telegram-notifications";
 
 const LAST_QUESTION_ID_STATE_KEY = "last_question_id";
@@ -44,9 +44,8 @@ export const monitorarPerguntas = async () => {
   monitorPerguntasInicializado = true;
 
   if (idAtual !== ultimoIdPergunta) {
-    const event = await eventRepository.createEvent({
-      event_type: "QUESTION_CREATED",
-      source_id: idAtual,
+    const event = await eventProcessor.process({
+      source: "mercadolivre",
       payload: perguntaMaisRecente,
     });
 

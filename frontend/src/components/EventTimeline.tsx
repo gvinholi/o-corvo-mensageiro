@@ -37,6 +37,12 @@ const eventStyles: Record<EventType, EventTimelineStyle> = {
     badgeClassName: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
     dotClassName: "bg-emerald-400",
   },
+  MESSAGE_RECEIVED: {
+    icon: "@",
+    label: "Mensagem",
+    badgeClassName: "border-violet-500/30 bg-violet-500/10 text-violet-300",
+    dotClassName: "bg-violet-400",
+  },
   MESSAGE_CREATED: {
     icon: "@",
     label: "Mensagem",
@@ -48,6 +54,12 @@ const eventStyles: Record<EventType, EventTimelineStyle> = {
     label: "Reclamação",
     badgeClassName: "border-amber-500/30 bg-amber-500/10 text-amber-300",
     dotClassName: "bg-amber-400",
+  },
+  ORDER_CANCELLED: {
+    icon: "x",
+    label: "Cancelamento",
+    badgeClassName: "border-red-500/30 bg-red-500/10 text-red-300",
+    dotClassName: "bg-red-400",
   },
   CANCELLATION_CREATED: {
     icon: "x",

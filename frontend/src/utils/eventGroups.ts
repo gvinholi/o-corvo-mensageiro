@@ -12,9 +12,9 @@ export const eventTypeGroups: Record<Exclude<EventFilter, "all">, EventType[]> =
   {
     questions: ["QUESTION_CREATED", "question"],
     orders: ["ORDER_CREATED", "order"],
-    messages: ["MESSAGE_CREATED", "message"],
+    messages: ["MESSAGE_RECEIVED", "MESSAGE_CREATED", "message"],
     claims: ["CLAIM_CREATED", "claim"],
-    cancellations: ["CANCELLATION_CREATED", "cancellation"],
+    cancellations: ["ORDER_CANCELLED", "CANCELLATION_CREATED", "cancellation"],
   };
 
 export function filterEventsByType(events: Event[], filter: EventFilter) {
