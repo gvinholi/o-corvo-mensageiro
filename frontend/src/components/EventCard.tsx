@@ -1,4 +1,9 @@
-import type { Event, EventPayload, EventType } from "../types/event";
+import type {
+  Event,
+  EventInternalStatus,
+  EventPayload,
+  EventType,
+} from "../types/event";
 
 interface EventCardProps {
   event: Event;
@@ -28,6 +33,22 @@ const eventTypeClasses: Record<EventType, string> = {
   message: "border-violet-500/30 bg-violet-500/10 text-violet-300",
   claim: "border-amber-500/30 bg-amber-500/10 text-amber-300",
   cancellation: "border-red-500/30 bg-red-500/10 text-red-300",
+};
+
+const internalStatusLabels: Record<EventInternalStatus, string> = {
+  not_viewed: "Não visualizado",
+  viewed: "Visualizado",
+  in_progress: "Em andamento",
+  resolved: "Resolvido",
+  archived: "Arquivado",
+};
+
+const internalStatusClasses: Record<EventInternalStatus, string> = {
+  not_viewed: "border-slate-500/30 bg-slate-500/10 text-slate-300",
+  viewed: "border-sky-500/30 bg-sky-500/10 text-sky-300",
+  in_progress: "border-amber-500/30 bg-amber-500/10 text-amber-300",
+  resolved: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+  archived: "border-zinc-500/30 bg-zinc-500/10 text-zinc-300",
 };
 
 const getPayloadText = (payload: EventPayload) => {
@@ -63,6 +84,8 @@ const formatEventTime = (date: string) =>
   }).format(new Date(date));
 
 export function EventCard({ event }: EventCardProps) {
+  const internalStatus = event.internal_status ?? "not_viewed";
+
   return (
     <article className="rounded-2xl border border-slate-800 bg-slate-950 p-4 transition duration-200 hover:border-slate-700 hover:bg-slate-950/80">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -86,11 +109,22 @@ export function EventCard({ event }: EventCardProps) {
           </p>
         </div>
 
-        <div className="shrink-0 rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-400">
-          <p>{formatEventDate(event.created_at)}</p>
-          <p className="mt-1 font-medium text-slate-200">
-            {formatEventTime(event.created_at)}
-          </p>
+        <div className="flex shrink-0 flex-col gap-3 lg:items-end">
+          <span
+            className={[
+              "inline-flex rounded-full border px-3 py-1 text-xs font-semibold",
+              internalStatusClasses[internalStatus],
+            ].join(" ")}
+          >
+            {internalStatusLabels[internalStatus]}
+          </span>
+
+          <div className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-400">
+            <p>{formatEventDate(event.created_at)}</p>
+            <p className="mt-1 font-medium text-slate-200">
+              {formatEventTime(event.created_at)}
+            </p>
+          </div>
         </div>
       </div>
     </article>

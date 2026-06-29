@@ -12,12 +12,20 @@ export type EventType =
 
 export type EventPayload = Record<string, unknown> | null;
 
+export type EventInternalStatus =
+  | "not_viewed"
+  | "viewed"
+  | "in_progress"
+  | "resolved"
+  | "archived";
+
 export interface Event {
   id: string;
   event_type: EventType;
   source_id: string;
   payload: EventPayload;
   created_at: string;
+  internal_status?: EventInternalStatus;
 }
 
 export interface PaginatedEventsResponse {
