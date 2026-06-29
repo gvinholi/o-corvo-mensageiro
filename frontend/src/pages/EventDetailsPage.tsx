@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { useEvent } from "../hooks/useEvent";
+import { formatDateBR, formatTimeBR } from "../utils/dateTime";
 import type { Event, EventInternalStatus, EventPayload } from "../types/event";
 
 const statusLabels: Record<EventInternalStatus, string> = {
@@ -17,16 +18,6 @@ const statusClasses: Record<EventInternalStatus, string> = {
   resolved: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
   archived: "border-zinc-500/30 bg-zinc-500/10 text-zinc-300",
 };
-
-const formatDate = (date: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-  }).format(new Date(date));
-
-const formatTime = (date: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
-    timeStyle: "medium",
-  }).format(new Date(date));
 
 const getPayloadValue = (payload: EventPayload, key: string) => {
   if (!payload || !(key in payload)) {
@@ -288,13 +279,13 @@ export function EventDetailsPage() {
         <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
           <p className="text-sm text-slate-500">Data</p>
           <p className="mt-2 text-lg font-semibold text-white">
-            {formatDate(event.created_at)}
+            {formatDateBR(event.created_at)}
           </p>
         </div>
         <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
           <p className="text-sm text-slate-500">Horário</p>
           <p className="mt-2 text-lg font-semibold text-white">
-            {formatTime(event.created_at)}
+            {formatTimeBR(event.created_at)}
           </p>
         </div>
       </section>

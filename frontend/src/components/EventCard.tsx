@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { formatDateBR, formatTimeBR } from "../utils/dateTime";
 import type {
   Event,
   EventInternalStatus,
@@ -76,16 +77,6 @@ const getEventDescription = (event: Event) => {
   return `Evento ${event.source_id} registrado no sistema.`;
 };
 
-const formatEventDate = (date: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-  }).format(new Date(date));
-
-const formatEventTime = (date: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
-    timeStyle: "short",
-  }).format(new Date(date));
-
 export function EventCard({ event }: EventCardProps) {
   const internalStatus = event.internal_status ?? "not_viewed";
 
@@ -126,9 +117,9 @@ export function EventCard({ event }: EventCardProps) {
           </span>
 
           <div className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-400">
-            <p>{formatEventDate(event.created_at)}</p>
+            <p>{formatDateBR(event.created_at)}</p>
             <p className="mt-1 font-medium text-slate-200">
-              {formatEventTime(event.created_at)}
+              {formatTimeBR(event.created_at)}
             </p>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import type { ServiceStatus } from "../types/health";
+import { formatTimeBR } from "../utils/dateTime";
 import { Skeleton } from "./Skeleton";
 
 interface HealthStatusPanelProps {
@@ -12,9 +13,7 @@ const formatLastUpdated = (lastUpdated: string | null) => {
     return "aguardando";
   }
 
-  return new Intl.DateTimeFormat("pt-BR", {
-    timeStyle: "medium",
-  }).format(new Date(lastUpdated));
+  return formatTimeBR(lastUpdated);
 };
 
 export function HealthStatusPanel({

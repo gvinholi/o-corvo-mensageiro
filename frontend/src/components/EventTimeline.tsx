@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { formatShortDateTimeBR } from "../utils/dateTime";
 import type { Event, EventPayload, EventType } from "../types/event";
 import { Skeleton } from "./Skeleton";
 
@@ -85,12 +86,6 @@ const eventStyles: Record<EventType, EventTimelineStyle> = {
     dotClassName: "bg-red-400",
   },
 };
-
-const formatEventTime = (date: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(date));
 
 const getPayloadText = (payload: EventPayload) => {
   if (!payload) {
@@ -286,7 +281,7 @@ export function EventTimeline({
                     className="whitespace-nowrap text-sm text-slate-500"
                     dateTime={event.created_at}
                   >
-                    {formatEventTime(event.created_at)}
+                    {formatShortDateTimeBR(event.created_at)}
                   </time>
                 </div>
               </div>

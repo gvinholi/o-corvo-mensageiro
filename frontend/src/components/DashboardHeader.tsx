@@ -1,3 +1,5 @@
+import { formatDateTimeBR } from "../utils/dateTime";
+
 interface DashboardHeaderProps {
   totalEvents: number;
   lastSyncedAt: string | null;
@@ -10,10 +12,7 @@ const formatLastSyncedAt = (lastSyncedAt: string | null) => {
     return "aguardando primeira sincronização";
   }
 
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "medium",
-  }).format(new Date(lastSyncedAt));
+  return formatDateTimeBR(lastSyncedAt);
 };
 
 export function DashboardHeader({

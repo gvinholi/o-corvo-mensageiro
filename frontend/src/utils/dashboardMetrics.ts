@@ -1,4 +1,5 @@
 import type { Event } from "../types/event";
+import { formatShortDateTimeBR } from "./dateTime";
 import { eventTypeGroups } from "./eventGroups";
 
 export type OperationMetricKey =
@@ -58,10 +59,7 @@ const formatLastUpdated = (date: string | null) => {
     return "sem registros";
   }
 
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(date));
+  return formatShortDateTimeBR(date);
 };
 
 export function buildOperationMetrics(events: Event[]): OperationMetric[] {
