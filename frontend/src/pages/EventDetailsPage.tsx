@@ -126,6 +126,58 @@ function QuickActions({
   );
 }
 
+const statusActionOptions: Array<{
+  label: string;
+  status: EventInternalStatus;
+}> = [
+  { label: "Visualizado", status: "viewed" },
+  { label: "Em andamento", status: "in_progress" },
+  { label: "Resolvido", status: "resolved" },
+  { label: "Arquivado", status: "archived" },
+];
+
+function StatusActions({
+  currentStatus,
+  updating,
+  onChangeStatus,
+}: {
+  currentStatus: EventInternalStatus;
+  updating: boolean;
+  onChangeStatus: (status: EventInternalStatus) => void;
+}) {
+  return (
+    <section className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+      <h2 className="text-lg font-semibold text-white">Status interno</h2>
+      <p className="mt-2 text-sm text-slate-500">
+        Atualize o ciclo de trabalho deste evento.
+      </p>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {statusActionOptions.map((option) => {
+          const isActive = currentStatus === option.status;
+
+          return (
+            <button
+              key={option.status}
+              type="button"
+              onClick={() => onChangeStatus(option.status)}
+              disabled={updating || isActive}
+              className={[
+                "rounded-xl border px-4 py-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60",
+                isActive
+                  ? "border-sky-500 bg-sky-500/10 text-sky-200"
+                  : "border-slate-700 bg-slate-950 text-slate-200 hover:border-sky-500 hover:text-white",
+              ].join(" ")}
+            >
+              {updating && !isActive ? "Atualizando..." : option.label}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function MercadoLivreInfo({ event }: { event: Event }) {
   const items = [
     { label: "ID de origem", value: event.source_id },
@@ -162,7 +214,8 @@ function MercadoLivreInfo({ event }: { event: Event }) {
 
 export function EventDetailsPage() {
   const { id } = useParams();
-  const { event, loading, error, refetch } = useEvent(id);
+  const { event, loading, updatingStatus, error, refetch, changeStatus } =
+    useEvent(id);
 
   if (loading) {
     return (
@@ -219,6 +272,12 @@ export function EventDetailsPage() {
 
       <QuickActions event={event} onRefresh={refetch} />
 
+      <StatusActions
+        currentStatus={internalStatus}
+        updating={updatingStatus}
+        onChangeStatus={changeStatus}
+      />
+
       <section className="grid gap-4 lg:grid-cols-3">
         <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
           <p className="text-sm text-slate-500">Tipo</p>
@@ -252,8 +311,7 @@ export function EventDetailsPage() {
       <section className="rounded-2xl border border-dashed border-slate-700 bg-slate-900 p-5">
         <h2 className="text-lg font-semibold text-white">Ações futuras</h2>
         <p className="mt-2 text-sm text-slate-500">
-          Espaço reservado para alteração de status, atribuição, comentários e
-          automações.
+          Espaço reservado para atribuição, comentários e automações.
         </p>
       </section>
     </div>

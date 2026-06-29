@@ -1,6 +1,7 @@
 import { apiRequest } from "./api";
 import type {
   Event,
+  EventInternalStatus,
   GetEventsParams,
   PaginatedEventsResponse,
 } from "../types/event";
@@ -28,4 +29,14 @@ export async function getEventById(
   signal?: AbortSignal
 ): Promise<Event> {
   return apiRequest<Event>(`/api/events/${id}`, { signal });
+}
+
+export async function updateEventStatus(
+  id: string,
+  status: EventInternalStatus
+): Promise<Event> {
+  return apiRequest<Event>(`/api/events/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
 }

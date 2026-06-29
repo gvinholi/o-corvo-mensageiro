@@ -7,6 +7,7 @@ const MAX_LIMIT = 100;
 const VALID_EVENT_STATUSES = [
   "not_viewed",
   "viewed",
+  "in_progress",
   "resolved",
   "archived",
 ] as const;

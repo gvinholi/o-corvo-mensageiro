@@ -13,7 +13,7 @@ import {
 const TABLE_NAME = "events";
 const DEFAULT_EVENTS_LIMIT = 50;
 const EVENT_SELECT_FIELDS =
-  "id, event_type, source_id, payload, created_at, viewed_at, resolved_at, archived_at";
+  "id, event_type, source_id, payload, created_at, viewed_at, in_progress_at, resolved_at, archived_at";
 
 const validateCreateEventInput = (input: CreateEventInput) => {
   if (!input.event_type.trim()) {
@@ -32,6 +32,10 @@ const getInternalStatus = (event: Omit<Event, "internal_status">) => {
 
   if (event.resolved_at) {
     return "resolved";
+  }
+
+  if (event.in_progress_at) {
+    return "in_progress";
   }
 
   if (event.viewed_at) {
@@ -55,6 +59,7 @@ const getLifecycleFieldsByStatus = (status: EventInternalStatus) => {
   if (status === "not_viewed") {
     return {
       viewed_at: null,
+      in_progress_at: null,
       resolved_at: null,
       archived_at: null,
     };
@@ -63,6 +68,16 @@ const getLifecycleFieldsByStatus = (status: EventInternalStatus) => {
   if (status === "viewed") {
     return {
       viewed_at: now,
+      in_progress_at: null,
+      resolved_at: null,
+      archived_at: null,
+    };
+  }
+
+  if (status === "in_progress") {
+    return {
+      viewed_at: now,
+      in_progress_at: now,
       resolved_at: null,
       archived_at: null,
     };
@@ -71,6 +86,7 @@ const getLifecycleFieldsByStatus = (status: EventInternalStatus) => {
   if (status === "resolved") {
     return {
       viewed_at: now,
+      in_progress_at: null,
       resolved_at: now,
       archived_at: null,
     };
@@ -78,6 +94,7 @@ const getLifecycleFieldsByStatus = (status: EventInternalStatus) => {
 
   return {
     viewed_at: now,
+    in_progress_at: null,
     resolved_at: null,
     archived_at: now,
   };
@@ -194,7 +211,9 @@ export const eventRepository: EventRepository = {
       .maybeSingle<Omit<Event, "internal_status">>();
 
     if (error) {
-      throw new Error(`Erro ao atualizar status do evento "${id}": ${error.message}`);
+      throw new Error(
+        `Erro ao atualizar status do evento "${id}": ${error.message}`
+      );
     }
 
     return data ? mapEvent(data) : null;

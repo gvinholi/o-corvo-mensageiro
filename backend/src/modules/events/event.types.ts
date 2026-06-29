@@ -15,6 +15,7 @@ export type EventPayload = Record<string, unknown> | null;
 export type EventInternalStatus =
   | "not_viewed"
   | "viewed"
+  | "in_progress"
   | "resolved"
   | "archived";
 
@@ -25,6 +26,7 @@ export interface Event {
   payload: EventPayload;
   created_at: string;
   viewed_at: string | null;
+  in_progress_at: string | null;
   resolved_at: string | null;
   archived_at: string | null;
   internal_status: EventInternalStatus;
