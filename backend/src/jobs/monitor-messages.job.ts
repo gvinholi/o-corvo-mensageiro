@@ -1,7 +1,6 @@
 import { buscarPedidosML } from "../services/mercadolivre/orders.service";
 import { buscarMensagensPorPedido } from "../services/mercadolivre/messages.service";
-import { enviarTelegram } from "../services/telegram/telegram.service";
-import { telegramNotificationRepository } from "../modules/telegram-notifications";
+import { addTelegramJob } from "../queues";
 
 let ultimoIdMensagem: string | null = null;
 let monitorMensagensInicializado = false;
@@ -44,17 +43,21 @@ export const monitorarMensagens = async () => {
     ultimoIdMensagem = idMensagem;
 
     const mensagem = `💬 Love Eletro: NOVA MENSAGEM\n${ultimaMensagem.text}`;
-    const telegramEnviado = await enviarTelegram(mensagem);
-
-    if (telegramEnviado) {
-      await telegramNotificationRepository.createNotification({
+    const telegramJob = await addTelegramJob({
+      jobId: `telegram:message:${idMensagem}`,
+      data: {
         message: mensagem,
-      });
+        metadata: {
+          source: "monitorarMensagens",
+          message_id: idMensagem,
+          order_id: orderId,
+          pack_id: packId,
+        },
+      },
+    });
 
-      console.log("Nova mensagem enviada ao Telegram.");
-      return;
-    }
-
-    console.log("Nova mensagem detectada, mas o envio ao Telegram falhou.");
+    console.log("Nova mensagem enfileirada para Telegram.", {
+      jobId: telegramJob.id,
+    });
   }
 };

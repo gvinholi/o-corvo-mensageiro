@@ -1,8 +1,7 @@
 import { buscarPerguntasML } from "../services/mercadolivre/questions.service";
-import { enviarTelegram } from "../services/telegram/telegram.service";
 import { monitorStateRepository } from "../modules/monitor-state";
 import { eventProcessor } from "../modules/event-processor";
-import { telegramNotificationRepository } from "../modules/telegram-notifications";
+import { addTelegramJob } from "../queues";
 
 const LAST_QUESTION_ID_STATE_KEY = "last_question_id";
 
@@ -61,19 +60,21 @@ export const monitorarPerguntas = async () => {
       `Pergunta: ${perguntaMaisRecente.text}`,
     ].join("\n");
 
-    const telegramEnviado = await enviarTelegram(mensagem);
-
-    if (telegramEnviado) {
-      await telegramNotificationRepository.createNotification({
+    const telegramJob = await addTelegramJob({
+      jobId: `telegram:event:${processedEvent.event.id}`,
+      data: {
         event_id: processedEvent.event.id,
         message: mensagem,
-      });
+        metadata: {
+          source: "monitorarPerguntas",
+          question_id: idAtual,
+        },
+      },
+    });
 
-      console.log("Nova pergunta detectada e enviada ao Telegram.");
-      return;
-    }
-
-    console.log("Nova pergunta detectada, mas o envio ao Telegram falhou.");
+    console.log("Nova pergunta detectada e enfileirada para Telegram.", {
+      jobId: telegramJob.id,
+    });
   } else {
     console.log("Nenhuma nova pergunta detectada.");
   }
