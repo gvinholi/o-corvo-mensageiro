@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { DashboardLayout } from "./layouts/DashboardLayout";
 import { Dashboard } from "./pages/Dashboard";
+import { EventsPage } from "./pages/EventsPage";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
 
 function App() {
@@ -8,15 +9,7 @@ function App() {
     <Routes>
       <Route element={<DashboardLayout />}>
         <Route index element={<Dashboard />} />
-        <Route
-          path="events"
-          element={
-            <PlaceholderPage
-              title="Eventos"
-              description="Histórico de eventos detectados pelos monitores."
-            />
-          }
-        />
+        <Route path="events" element={<EventsPage />} />
         <Route
           path="notifications"
           element={
