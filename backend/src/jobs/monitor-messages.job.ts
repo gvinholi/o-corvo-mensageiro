@@ -1,15 +1,96 @@
 import { buscarPedidosML } from "../services/mercadolivre/orders.service";
 import { buscarMensagensPorPedido } from "../services/mercadolivre/messages.service";
 import { addTelegramJob } from "../queues";
+import { eventProcessor } from "../modules/event-processor";
+import { monitorStateRepository } from "../modules/monitor-state";
 
-let ultimoIdMensagem: string | null = null;
+const LAST_MESSAGE_ID_STATE_KEY = "last_message_id";
+
 let monitorMensagensInicializado = false;
+
+const getMessageTimestamp = (mensagem: any) =>
+  mensagem.date_created ||
+  mensagem.created_at ||
+  mensagem.message_date ||
+  mensagem.date ||
+  "";
+
+const ordenarMensagensPorDataCrescente = (mensagens: any[]) =>
+  mensagens.sort((a: any, b: any) => {
+    const timestampA = new Date(getMessageTimestamp(a)).getTime();
+    const timestampB = new Date(getMessageTimestamp(b)).getTime();
+
+    if (Number.isNaN(timestampA) || Number.isNaN(timestampB)) {
+      return 0;
+    }
+
+    return timestampA - timestampB;
+  });
+
+const criarPayloadMensagem = (
+  mensagem: any,
+  orderId: number,
+  packId?: number | null,
+  sellerId?: number | null
+) => ({
+  ...mensagem,
+  topic: "messages",
+  resource: `/messages/${mensagem.id}`,
+  order_id: orderId,
+  pack_id: packId,
+  seller_id: sellerId,
+});
+
+const processarMensagemComoReconciliacao = async (
+  mensagem: any,
+  orderId: number,
+  packId?: number | null,
+  sellerId?: number | null
+) => {
+  const idMensagem = String(mensagem.id);
+  const payload = criarPayloadMensagem(mensagem, orderId, packId, sellerId);
+  const processedEvent = await eventProcessor.process({
+    source: "mercadolivre",
+    payload,
+  });
+
+  if (!processedEvent.processed || !processedEvent.event) {
+    console.log("Reconciliação de mensagens: evento já processado.", {
+      message_id: idMensagem,
+    });
+    return;
+  }
+
+  const telegramJob = await addTelegramJob({
+    jobId: `telegram:event:${processedEvent.event.id}`,
+    data: {
+      event_id: processedEvent.event.id,
+      message: `💬 Love Eletro: NOVA MENSAGEM\n${mensagem.text}`,
+      metadata: {
+        source: "monitorarMensagens",
+        mode: "safety_polling",
+        message_id: idMensagem,
+        order_id: orderId,
+        pack_id: packId,
+      },
+    },
+  });
+
+  console.log("Reconciliação de mensagens: evento perdido enfileirado.", {
+    message_id: idMensagem,
+    event_id: processedEvent.event.id,
+    telegramJobId: telegramJob.id,
+  });
+};
 
 export const monitorarMensagens = async () => {
   const pedidos = await buscarPedidosML();
+  const ultimoIdMensagem = await monitorStateRepository.getState(
+    LAST_MESSAGE_ID_STATE_KEY
+  );
 
   if (!pedidos.length) {
-    console.log("Nenhum pedido encontrado.");
+    console.log("Reconciliação de mensagens: nenhum pedido encontrado.");
     monitorMensagensInicializado = true;
     return;
   }
@@ -22,42 +103,46 @@ export const monitorarMensagens = async () => {
   const mensagens = await buscarMensagensPorPedido(orderId, packId, sellerId);
 
   if (!mensagens.length) {
-    console.log("Nenhuma mensagem encontrada.");
+    console.log("Reconciliação de mensagens: nenhuma mensagem encontrada.");
     monitorMensagensInicializado = true;
     return;
   }
 
-  const ultimaMensagem = mensagens[mensagens.length - 1];
+  const mensagensOrdenadas = ordenarMensagensPorDataCrescente(mensagens);
+  const ultimaMensagem = mensagensOrdenadas[mensagensOrdenadas.length - 1];
+  const idMaisRecente = String(ultimaMensagem.id);
 
-  const idMensagem = String(ultimaMensagem.id);
+  console.log("Reconciliação de mensagens iniciada:", {
+    total: mensagensOrdenadas.length,
+    last_message_id: ultimoIdMensagem,
+    most_recent_message_id: idMaisRecente,
+    order_id: orderId,
+  });
 
-  console.log("Última mensagem:", ultimaMensagem.text);
-
-  if (!monitorMensagensInicializado) {
-    ultimoIdMensagem = idMensagem;
+  if (!monitorMensagensInicializado && !ultimoIdMensagem) {
+    await monitorStateRepository.saveState(
+      LAST_MESSAGE_ID_STATE_KEY,
+      idMaisRecente
+    );
     monitorMensagensInicializado = true;
+    console.log(
+      "Primeira reconciliação de mensagens. Checkpoint salvo sem processar backlog."
+    );
     return;
   }
 
-  if (idMensagem !== ultimoIdMensagem) {
-    ultimoIdMensagem = idMensagem;
+  monitorMensagensInicializado = true;
 
-    const mensagem = `💬 Love Eletro: NOVA MENSAGEM\n${ultimaMensagem.text}`;
-    const telegramJob = await addTelegramJob({
-      jobId: `telegram:message:${idMensagem}`,
-      data: {
-        message: mensagem,
-        metadata: {
-          source: "monitorarMensagens",
-          message_id: idMensagem,
-          order_id: orderId,
-          pack_id: packId,
-        },
-      },
-    });
-
-    console.log("Nova mensagem enfileirada para Telegram.", {
-      jobId: telegramJob.id,
-    });
+  for (const mensagem of mensagensOrdenadas) {
+    await processarMensagemComoReconciliacao(
+      mensagem,
+      orderId,
+      packId,
+      sellerId
+    );
+    await monitorStateRepository.saveState(
+      LAST_MESSAGE_ID_STATE_KEY,
+      String(mensagem.id)
+    );
   }
 };

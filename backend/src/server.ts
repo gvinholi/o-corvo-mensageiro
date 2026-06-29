@@ -5,6 +5,8 @@ import { monitorarPerguntas } from "./jobs/monitor.job";
 import { monitorarMensagens } from "./jobs/monitor-messages.job"
 import { startEventsWorker, startTelegramWorker } from "./queues";
 
+const SAFETY_POLLING_INTERVAL_MS = 5 * 60 * 1000;
+
 const executarMonitor = async (
   nome: string,
   monitor: () => Promise<void>
@@ -34,8 +36,8 @@ app.listen(env.PORT, async () => {
 
 setInterval(async () => {
   await executarMonitor("perguntas", monitorarPerguntas);
-}, 30000);
+}, SAFETY_POLLING_INTERVAL_MS);
 
 setInterval(async () => {
   await executarMonitor("mensagens", monitorarMensagens);
-}, 30000);
+}, SAFETY_POLLING_INTERVAL_MS);
