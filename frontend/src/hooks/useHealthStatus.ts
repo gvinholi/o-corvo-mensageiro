@@ -13,6 +13,7 @@ interface UseHealthStatusState {
 const buildOfflineServices = (lastUpdated: string | null): ServiceStatus[] => [
   { key: "backend", name: "Backend", online: false, lastUpdated },
   { key: "supabase", name: "Supabase", online: false, lastUpdated },
+  { key: "redis", name: "Redis", online: false, lastUpdated },
   { key: "mercadolivre", name: "Mercado Livre", online: false, lastUpdated },
   { key: "telegram", name: "Telegram", online: false, lastUpdated },
 ];
@@ -56,6 +57,12 @@ export function useHealthStatus() {
               key: "supabase",
               name: "Supabase",
               online: health.services.supabase,
+              lastUpdated,
+            },
+            {
+              key: "redis",
+              name: "Redis",
+              online: health.services.redis,
               lastUpdated,
             },
             {

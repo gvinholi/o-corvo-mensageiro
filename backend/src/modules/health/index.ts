@@ -1,5 +1,6 @@
 export {
   checkMercadoLivreHealth,
+  checkRedisHealth,
   checkServicesHealth,
   checkSupabaseHealth,
   checkTelegramHealth,

@@ -12,4 +12,8 @@ export const env = {
   TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID || "",
   SUPABASE_URL: process.env.SUPABASE_URL || "",
   SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || "",
+  REDIS_URL: process.env.REDIS_URL || "",
+  REDIS_HOST: process.env.REDIS_HOST || "localhost",
+  REDIS_PORT: process.env.REDIS_PORT || "6379",
+  REDIS_PASSWORD: process.env.REDIS_PASSWORD || "",
 };

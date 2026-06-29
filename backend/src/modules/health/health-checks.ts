@@ -1,10 +1,12 @@
 import axios from "axios";
 import { env } from "../../config/env";
+import { connectRedis } from "../../config/redis";
 import { supabase } from "../../config/supabase";
 import { obterAccessToken } from "../../services/mercadolivre/auth.service";
 
 export interface HealthServicesStatus {
   supabase: boolean;
+  redis: boolean;
   telegram: boolean;
   mercadolivre: boolean;
 }
@@ -40,6 +42,18 @@ export const checkTelegramHealth = async (): Promise<boolean> => {
   }
 };
 
+export const checkRedisHealth = async (): Promise<boolean> => {
+  try {
+    const client = await connectRedis();
+    const response = await client.ping();
+
+    return response === "PONG";
+  } catch (error) {
+    console.error("Healthcheck Redis falhou:", error);
+    return false;
+  }
+};
+
 export const checkMercadoLivreHealth = async (): Promise<boolean> => {
   try {
     const accessToken = obterAccessToken();
@@ -63,14 +77,16 @@ export const checkMercadoLivreHealth = async (): Promise<boolean> => {
 
 export const checkServicesHealth =
   async (): Promise<HealthServicesStatus> => {
-    const [supabase, telegram, mercadolivre] = await Promise.all([
+    const [supabase, redis, telegram, mercadolivre] = await Promise.all([
       checkSupabaseHealth(),
+      checkRedisHealth(),
       checkTelegramHealth(),
       checkMercadoLivreHealth(),
     ]);
 
     return {
       supabase,
+      redis,
       telegram,
       mercadolivre,
     };

@@ -47,7 +47,7 @@ export function HealthStatusPanel({
 
       <div className="mt-5 space-y-3">
         {isInitialLoading
-          ? [0, 1, 2, 3].map((item) => (
+          ? [0, 1, 2, 3, 4].map((item) => (
               <div
                 key={item}
                 className="rounded-2xl border border-slate-800 bg-slate-950 p-4"
