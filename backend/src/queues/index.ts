@@ -7,6 +7,7 @@ export {
   retryJob,
   startEventsWorker,
 } from "./events";
+export { getQueuesHealth } from "./queue-monitoring.service";
 export {
   addFailedEvent,
   FAILED_EVENTS_QUEUE_NAME,
@@ -29,6 +30,10 @@ export type {
   EventQueueJobData,
   QueueJobActionInput,
 } from "./events";
+export type {
+  QueueHealth,
+  QueuesHealthResponse,
+} from "./queue-monitoring.types";
 export type {
   AddFailedEventInput,
   FailedEventJobData,
