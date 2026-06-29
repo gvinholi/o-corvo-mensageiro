@@ -3,13 +3,17 @@ import { supabase } from "../../config/supabase";
 import {
   CreateEventInput,
   Event,
+  EventInternalStatus,
   EventRepository,
   GetEventsFilters,
   PaginatedEvents,
+  UpdateEventStatusInput,
 } from "./event.types";
 
 const TABLE_NAME = "events";
 const DEFAULT_EVENTS_LIMIT = 50;
+const EVENT_SELECT_FIELDS =
+  "id, event_type, source_id, payload, created_at, viewed_at, resolved_at, archived_at";
 
 const validateCreateEventInput = (input: CreateEventInput) => {
   if (!input.event_type.trim()) {
@@ -19,6 +23,64 @@ const validateCreateEventInput = (input: CreateEventInput) => {
   if (!input.source_id.trim()) {
     throw new Error("O ID de origem do evento é obrigatório.");
   }
+};
+
+const getInternalStatus = (event: Omit<Event, "internal_status">) => {
+  if (event.archived_at) {
+    return "archived";
+  }
+
+  if (event.resolved_at) {
+    return "resolved";
+  }
+
+  if (event.viewed_at) {
+    return "viewed";
+  }
+
+  return "not_viewed";
+};
+
+const mapEvent = (event: Omit<Event, "internal_status">): Event => ({
+  ...event,
+  internal_status: getInternalStatus(event),
+});
+
+const mapEvents = (events: Array<Omit<Event, "internal_status">>) =>
+  events.map(mapEvent);
+
+const getLifecycleFieldsByStatus = (status: EventInternalStatus) => {
+  const now = new Date().toISOString();
+
+  if (status === "not_viewed") {
+    return {
+      viewed_at: null,
+      resolved_at: null,
+      archived_at: null,
+    };
+  }
+
+  if (status === "viewed") {
+    return {
+      viewed_at: now,
+      resolved_at: null,
+      archived_at: null,
+    };
+  }
+
+  if (status === "resolved") {
+    return {
+      viewed_at: now,
+      resolved_at: now,
+      archived_at: null,
+    };
+  }
+
+  return {
+    viewed_at: now,
+    resolved_at: null,
+    archived_at: now,
+  };
 };
 
 export const eventRepository: EventRepository = {
@@ -38,23 +100,23 @@ export const eventRepository: EventRepository = {
         onConflict: "event_type,source_id",
         ignoreDuplicates: true,
       })
-      .select("id, event_type, source_id, payload, created_at")
-      .maybeSingle<Event>();
+      .select(EVENT_SELECT_FIELDS)
+      .maybeSingle<Omit<Event, "internal_status">>();
 
     if (error) {
       throw new Error(`Erro ao criar evento: ${error.message}`);
     }
 
     if (data) {
-      return data;
+      return mapEvent(data);
     }
 
     const { data: existingEvent, error: existingEventError } = await supabase
       .from(TABLE_NAME)
-      .select("id, event_type, source_id, payload, created_at")
+      .select(EVENT_SELECT_FIELDS)
       .eq("event_type", input.event_type)
       .eq("source_id", input.source_id)
-      .single<Event>();
+      .single<Omit<Event, "internal_status">>();
 
     if (existingEventError) {
       throw new Error(
@@ -62,7 +124,7 @@ export const eventRepository: EventRepository = {
       );
     }
 
-    return existingEvent;
+    return mapEvent(existingEvent);
   },
 
   async getEvents(filters: GetEventsFilters = {}): Promise<PaginatedEvents> {
@@ -73,7 +135,7 @@ export const eventRepository: EventRepository = {
 
     let query = supabase
       .from(TABLE_NAME)
-      .select("id, event_type, source_id, payload, created_at", {
+      .select(EVENT_SELECT_FIELDS, {
         count: "exact",
       })
       .order("created_at", { ascending: false })
@@ -87,7 +149,9 @@ export const eventRepository: EventRepository = {
       query = query.eq("source_id", filters.source_id);
     }
 
-    const { data, error, count } = await query.returns<Event[]>();
+    const { data, error, count } = await query.returns<
+      Array<Omit<Event, "internal_status">>
+    >();
 
     if (error) {
       throw new Error(`Erro ao buscar eventos: ${error.message}`);
@@ -96,7 +160,7 @@ export const eventRepository: EventRepository = {
     const total = count ?? 0;
 
     return {
-      data: data ?? [],
+      data: mapEvents(data ?? []),
       page,
       limit,
       total,
@@ -107,14 +171,32 @@ export const eventRepository: EventRepository = {
   async getEventById(id: string): Promise<Event | null> {
     const { data, error } = await supabase
       .from(TABLE_NAME)
-      .select("id, event_type, source_id, payload, created_at")
+      .select(EVENT_SELECT_FIELDS)
       .eq("id", id)
-      .maybeSingle<Event>();
+      .maybeSingle<Omit<Event, "internal_status">>();
 
     if (error) {
       throw new Error(`Erro ao buscar evento "${id}": ${error.message}`);
     }
 
-    return data ?? null;
+    return data ? mapEvent(data) : null;
+  },
+
+  async updateEventStatus(
+    id: string,
+    input: UpdateEventStatusInput
+  ): Promise<Event | null> {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .update(getLifecycleFieldsByStatus(input.status))
+      .eq("id", id)
+      .select(EVENT_SELECT_FIELDS)
+      .maybeSingle<Omit<Event, "internal_status">>();
+
+    if (error) {
+      throw new Error(`Erro ao atualizar status do evento "${id}": ${error.message}`);
+    }
+
+    return data ? mapEvent(data) : null;
   },
 };

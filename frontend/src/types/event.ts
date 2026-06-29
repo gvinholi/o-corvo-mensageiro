@@ -25,7 +25,10 @@ export interface Event {
   source_id: string;
   payload: EventPayload;
   created_at: string;
-  internal_status?: EventInternalStatus;
+  viewed_at: string | null;
+  resolved_at: string | null;
+  archived_at: string | null;
+  internal_status: EventInternalStatus;
 }
 
 export interface PaginatedEventsResponse {
