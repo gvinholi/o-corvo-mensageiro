@@ -18,6 +18,12 @@ interface EventTimelineStyle {
 }
 
 const eventStyles: Record<EventType, EventTimelineStyle> = {
+  RAW_WEBHOOK: {
+    icon: "*",
+    label: "Webhook",
+    badgeClassName: "border-slate-500/30 bg-slate-500/10 text-slate-300",
+    dotClassName: "bg-slate-400",
+  },
   QUESTION_CREATED: {
     icon: "?",
     label: "Pergunta",

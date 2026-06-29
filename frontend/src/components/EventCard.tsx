@@ -11,6 +11,7 @@ interface EventCardProps {
 }
 
 const eventTypeLabels: Record<EventType, string> = {
+  RAW_WEBHOOK: "Webhook",
   QUESTION_CREATED: "Pergunta",
   ORDER_CREATED: "Pedido",
   MESSAGE_CREATED: "Mensagem",
@@ -24,6 +25,7 @@ const eventTypeLabels: Record<EventType, string> = {
 };
 
 const eventTypeClasses: Record<EventType, string> = {
+  RAW_WEBHOOK: "border-slate-500/30 bg-slate-500/10 text-slate-300",
   QUESTION_CREATED: "border-sky-500/30 bg-sky-500/10 text-sky-300",
   ORDER_CREATED: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
   MESSAGE_CREATED: "border-violet-500/30 bg-violet-500/10 text-violet-300",

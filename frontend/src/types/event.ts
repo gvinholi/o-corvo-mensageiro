@@ -1,4 +1,5 @@
 export type EventType =
+  | "RAW_WEBHOOK"
   | "QUESTION_CREATED"
   | "ORDER_CREATED"
   | "MESSAGE_CREATED"
