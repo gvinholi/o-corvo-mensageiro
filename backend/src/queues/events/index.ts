@@ -5,6 +5,7 @@ export {
   removeJob,
   retryJob,
 } from "./events.queue";
+export { getEventsWorker, startEventsWorker } from "./events.worker";
 export type {
   AddEventJobInput,
   EventQueueJobData,

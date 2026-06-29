@@ -33,6 +33,6 @@ export const receiveMercadoLivreWebhook = (req: Request, res: Response) => {
   void webhooksService
     .registerMercadoLivreWebhook(req.body)
     .catch((error: unknown) => {
-      console.error("Erro ao salvar webhook bruto do Mercado Livre:", error);
+      console.error("Erro ao enfileirar webhook do Mercado Livre:", error);
     });
 };

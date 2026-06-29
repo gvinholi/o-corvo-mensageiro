@@ -11,16 +11,16 @@ export const EVENTS_QUEUE_NAME = "events";
 export const eventsQueue = new Queue<EventQueueJobData, unknown, string>(
   EVENTS_QUEUE_NAME,
   {
-  connection: eventsQueueConnection,
-  defaultJobOptions: {
-    attempts: 3,
-    backoff: {
-      type: "exponential",
-      delay: 5000,
+    connection: eventsQueueConnection,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: {
+        type: "exponential",
+        delay: 5000,
+      },
+      removeOnComplete: false,
+      removeOnFail: false,
     },
-    removeOnComplete: false,
-    removeOnFail: false,
-  },
   }
 );
 

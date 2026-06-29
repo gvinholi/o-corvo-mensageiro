@@ -3,6 +3,7 @@ import { env } from "./config/env"
 import "./config/supabase";
 import { monitorarPerguntas } from "./jobs/monitor.job";
 import { monitorarMensagens } from "./jobs/monitor-messages.job"
+import { startEventsWorker } from "./queues";
 
 const executarMonitor = async (
   nome: string,
@@ -25,6 +26,7 @@ const executarMonitor = async (
 
 app.listen(env.PORT, async () => {
   console.log(`Servidor rodando em http://localhost:${env.PORT}`);
+  startEventsWorker();
   await executarMonitor("perguntas", monitorarPerguntas);
   await executarMonitor("mensagens", monitorarMensagens);
 });
