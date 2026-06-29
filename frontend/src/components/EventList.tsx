@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { Event } from "../types/event";
 import { EventCard } from "./EventCard";
 import { Skeleton } from "./Skeleton";
@@ -28,6 +29,29 @@ function EventListSkeleton() {
   );
 }
 
+function LoadMoreControls({
+  hasMore,
+  loadingMore,
+  onLoadMore,
+}: Pick<EventListProps, "hasMore" | "loadingMore" | "onLoadMore">) {
+  if (!hasMore) {
+    return (
+      <p className="text-sm text-slate-500">Todos os eventos carregados.</p>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onLoadMore}
+      disabled={loadingMore}
+      className="rounded-xl border border-slate-700 bg-slate-950 px-5 py-3 text-sm font-medium text-slate-200 transition hover:border-sky-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {loadingMore ? "Carregando..." : "Carregar mais"}
+    </button>
+  );
+}
+
 export function EventList({
   events,
   loading = false,
@@ -36,10 +60,40 @@ export function EventList({
   hasMore = false,
   onLoadMore,
 }: EventListProps) {
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const sortedEvents = [...events].sort(
     (a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
+
+  useEffect(() => {
+    if (!hasMore || loading || loadingMore || !onLoadMore) {
+      return;
+    }
+
+    const target = loadMoreRef.current;
+
+    if (!target) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          onLoadMore();
+        }
+      },
+      {
+        rootMargin: "300px",
+      }
+    );
+
+    observer.observe(target);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, loading, loadingMore, onLoadMore]);
 
   if (loading) {
     return <EventListSkeleton />;
@@ -66,6 +120,15 @@ export function EventList({
         <p className="mt-2 text-sm text-slate-500">
           Os eventos registrados pelos monitores aparecerão nesta lista.
         </p>
+
+        <div ref={loadMoreRef} className="mt-6 h-1" />
+        <div className="mt-6 flex justify-center">
+          <LoadMoreControls
+            hasMore={hasMore}
+            loadingMore={loadingMore}
+            onLoadMore={onLoadMore}
+          />
+        </div>
       </div>
     );
   }
@@ -91,19 +154,13 @@ export function EventList({
         </div>
       )}
 
+      <div ref={loadMoreRef} className="mt-6 h-1" />
       <div className="mt-6 flex justify-center">
-        {hasMore ? (
-          <button
-            type="button"
-            onClick={onLoadMore}
-            disabled={loadingMore}
-            className="rounded-xl border border-slate-700 bg-slate-950 px-5 py-3 text-sm font-medium text-slate-200 transition hover:border-sky-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loadingMore ? "Carregando..." : "Carregar mais"}
-          </button>
-        ) : (
-          <p className="text-sm text-slate-500">Todos os eventos carregados.</p>
-        )}
+        <LoadMoreControls
+          hasMore={hasMore}
+          loadingMore={loadingMore}
+          onLoadMore={onLoadMore}
+        />
       </div>
     </div>
   );
