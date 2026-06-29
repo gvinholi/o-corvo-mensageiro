@@ -44,12 +44,17 @@ export const monitorarPerguntas = async () => {
   monitorPerguntasInicializado = true;
 
   if (idAtual !== ultimoIdPergunta) {
-    const event = await eventProcessor.process({
+    const processedEvent = await eventProcessor.process({
       source: "mercadolivre",
       payload: perguntaMaisRecente,
     });
 
     await monitorStateRepository.saveState(LAST_QUESTION_ID_STATE_KEY, idAtual);
+
+    if (!processedEvent.processed || !processedEvent.event) {
+      console.log("Pergunta já registrada anteriormente. Notificação ignorada.");
+      return;
+    }
 
     const mensagem = [
       "❓ Love Eletro: NOVA PERGUNTA",
@@ -60,7 +65,7 @@ export const monitorarPerguntas = async () => {
 
     if (telegramEnviado) {
       await telegramNotificationRepository.createNotification({
-        event_id: event.id,
+        event_id: processedEvent.event.id,
         message: mensagem,
       });
 

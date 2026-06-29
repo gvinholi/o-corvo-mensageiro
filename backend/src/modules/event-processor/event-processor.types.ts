@@ -12,3 +12,12 @@ export interface EventHandler {
   canHandle(input: ProcessEventInput): boolean;
   handle(input: ProcessEventInput): Promise<Event>;
 }
+
+export interface ProcessEventResult {
+  event: Event | null;
+  event_type: EventType;
+  source_id: string;
+  source_timestamp: string;
+  processed: boolean;
+  duplicate: boolean;
+}

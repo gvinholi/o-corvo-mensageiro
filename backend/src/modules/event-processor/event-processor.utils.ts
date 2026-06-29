@@ -1,4 +1,4 @@
-import { EventPayload } from "../events";
+import { EventPayload, EventType } from "../events";
 
 export const getPayloadValue = (
   payload: EventPayload,
@@ -32,6 +32,31 @@ export const getResource = (payload: EventPayload) =>
 
 export const getStatus = (payload: EventPayload) =>
   getStringPayloadValue(payload, "status")?.toLowerCase() ?? "";
+
+export const getSourceTimestamp = (payload: EventPayload): string =>
+  getStringPayloadValue(payload, "timestamp") ||
+  getStringPayloadValue(payload, "received") ||
+  getStringPayloadValue(payload, "sent") ||
+  getStringPayloadValue(payload, "date_created") ||
+  getStringPayloadValue(payload, "created_at") ||
+  getStringPayloadValue(payload, "last_updated") ||
+  getStringPayloadValue(payload, "updated_at") ||
+  "no-source-timestamp";
+
+export const getFallbackPrefixByEventType = (eventType: EventType): string => {
+  const fallbackPrefixes: Partial<Record<EventType, string>> = {
+    RAW_WEBHOOK: "raw-webhook",
+    QUESTION_CREATED: "question",
+    ORDER_CREATED: "order",
+    MESSAGE_RECEIVED: "message",
+    MESSAGE_CREATED: "message",
+    CLAIM_CREATED: "claim",
+    ORDER_CANCELLED: "order-cancelled",
+    CANCELLATION_CREATED: "order-cancelled",
+  };
+
+  return fallbackPrefixes[eventType] ?? "event";
+};
 
 export const buildSourceId = (
   payload: EventPayload,
