@@ -8,7 +8,7 @@ if (!env.REDIS_URL && (Number.isNaN(redisPort) || redisPort <= 0)) {
 }
 
 const redisSocketOptions = {
-  connectTimeout: 1000,
+  connectTimeout: 5000,
   reconnectStrategy: false as const,
 };
 
