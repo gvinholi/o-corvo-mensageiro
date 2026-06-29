@@ -8,6 +8,14 @@ export {
   startEventsWorker,
 } from "./events";
 export {
+  addFailedEvent,
+  FAILED_EVENTS_QUEUE_NAME,
+  failedEventsQueue,
+  getFailedEvents,
+  registerFailedEvent,
+  shouldRegisterFailedEvent,
+} from "./failed-events";
+export {
   addTelegramJob,
   getTelegramWorker,
   removeTelegramJob,
@@ -21,6 +29,13 @@ export type {
   EventQueueJobData,
   QueueJobActionInput,
 } from "./events";
+export type {
+  AddFailedEventInput,
+  FailedEventJobData,
+  FailedEventRecord,
+  GetFailedEventsInput,
+  PaginatedFailedEvents,
+} from "./failed-events";
 export type {
   AddTelegramJobInput,
   TelegramQueueJobActionInput,

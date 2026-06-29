@@ -1,6 +1,7 @@
 import { Worker } from "bullmq";
 import { telegramNotificationRepository } from "../../modules/telegram-notifications";
 import { enviarTelegram } from "../../services/telegram/telegram.service";
+import { registerFailedEvent } from "../failed-events";
 import { queueConnection } from "../queue.connection";
 import { TelegramQueueJobData } from "./telegram-queue.types";
 import { TELEGRAM_QUEUE_NAME } from "./telegram.queue";
@@ -63,6 +64,12 @@ export const startTelegramWorker = () => {
       attemptsMade: job?.attemptsMade,
       error: error.message,
     });
+
+    void registerFailedEvent(TELEGRAM_QUEUE_NAME, job, error).catch(
+      (failedEventError) => {
+        console.error("Erro ao registrar falha do Telegram:", failedEventError);
+      }
+    );
   });
 
   return telegramWorker;

@@ -1,5 +1,6 @@
 import { Job, Worker } from "bullmq";
 import { eventProcessor, ProcessEventResult } from "../../modules/event-processor";
+import { registerFailedEvent } from "../failed-events";
 import { EVENTS_QUEUE_NAME } from "./events.queue";
 import { eventsQueueConnection } from "./events-queue.connection";
 import { EventQueueJobData } from "./events-queue.types";
@@ -50,6 +51,12 @@ export const startEventsWorker = () => {
       attemptsMade: job?.attemptsMade,
       error: error.message,
     });
+
+    void registerFailedEvent(EVENTS_QUEUE_NAME, job, error).catch(
+      (failedEventError) => {
+        console.error("Erro ao registrar falha de evento:", failedEventError);
+      }
+    );
   });
 
   return eventsWorker;
