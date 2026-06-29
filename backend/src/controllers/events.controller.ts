@@ -57,3 +57,30 @@ export const listarEventos = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const buscarEventoPorId = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || Array.isArray(id)) {
+      return res.status(400).json({
+        error: "ID do evento inválido.",
+      });
+    }
+
+    const event = await eventService.getEventById(id);
+
+    if (!event) {
+      return res.status(404).json({
+        error: "Evento não encontrado.",
+      });
+    }
+
+    return res.json(event);
+  } catch (error: any) {
+    return res.status(500).json({
+      error: "Erro ao buscar evento.",
+      message: error.message,
+    });
+  }
+};

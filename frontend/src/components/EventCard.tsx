@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type {
   Event,
   EventInternalStatus,
@@ -87,7 +88,10 @@ export function EventCard({ event }: EventCardProps) {
   const internalStatus = event.internal_status ?? "not_viewed";
 
   return (
-    <article className="rounded-2xl border border-slate-800 bg-slate-950 p-4 transition duration-200 hover:border-slate-700 hover:bg-slate-950/80">
+    <Link
+      to={`/events/${event.id}`}
+      className="block rounded-2xl border border-slate-800 bg-slate-950 p-4 transition duration-200 hover:border-slate-700 hover:bg-slate-950/80"
+    >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -127,6 +131,6 @@ export function EventCard({ event }: EventCardProps) {
           </div>
         </div>
       </div>
-    </article>
+    </Link>
   );
 }

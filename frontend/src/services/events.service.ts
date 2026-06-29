@@ -1,5 +1,9 @@
 import { apiRequest } from "./api";
-import type { GetEventsParams, PaginatedEventsResponse } from "../types/event";
+import type {
+  Event,
+  GetEventsParams,
+  PaginatedEventsResponse,
+} from "../types/event";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 50;
@@ -17,4 +21,11 @@ export async function getEvents(
     `/api/events?${searchParams.toString()}`,
     { signal }
   );
+}
+
+export async function getEventById(
+  id: string,
+  signal?: AbortSignal
+): Promise<Event> {
+  return apiRequest<Event>(`/api/events/${id}`, { signal });
 }

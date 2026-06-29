@@ -1,8 +1,12 @@
 import { Router } from "express";
-import { listarEventos } from "../controllers/events.controller";
+import {
+  buscarEventoPorId,
+  listarEventos,
+} from "../controllers/events.controller";
 
 const router = Router();
 
 router.get("/", listarEventos);
+router.get("/:id", buscarEventoPorId);
 
 export default router;

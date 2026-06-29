@@ -103,4 +103,18 @@ export const eventRepository: EventRepository = {
       totalPages: Math.ceil(total / limit),
     };
   },
+
+  async getEventById(id: string): Promise<Event | null> {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select("id, event_type, source_id, payload, created_at")
+      .eq("id", id)
+      .maybeSingle<Event>();
+
+    if (error) {
+      throw new Error(`Erro ao buscar evento "${id}": ${error.message}`);
+    }
+
+    return data ?? null;
+  },
 };

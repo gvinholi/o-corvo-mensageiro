@@ -39,4 +39,5 @@ export interface PaginatedEvents {
 export interface EventRepository {
   createEvent(input: CreateEventInput): Promise<Event>;
   getEvents(filters?: GetEventsFilters): Promise<PaginatedEvents>;
+  getEventById(id: string): Promise<Event | null>;
 }
