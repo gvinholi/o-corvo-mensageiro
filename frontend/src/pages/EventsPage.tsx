@@ -1,3 +1,6 @@
+import { EventList } from "../components/EventList";
+import { useEvents } from "../hooks/useEvents";
+
 const filterPlaceholders = [
   "Tipo de evento",
   "Período",
@@ -6,6 +9,11 @@ const filterPlaceholders = [
 ];
 
 export function EventsPage() {
+  const { events, loading, loadingMore, error, hasMore, loadMore, total } =
+    useEvents({
+      limit: 50,
+    });
+
   return (
     <div className="space-y-6">
       <section className="animate-fade-in-up rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-950 to-sky-950/20 p-6 shadow-2xl shadow-slate-950/40 sm:p-8">
@@ -28,7 +36,8 @@ export function EventsPage() {
               Histórico de eventos
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Listagem preparada para receber eventos paginados, filtros e busca.
+              {total} evento{total === 1 ? "" : "s"} cadastrado
+              {total === 1 ? "" : "s"} no histórico.
             </p>
           </div>
 
@@ -38,12 +47,6 @@ export function EventsPage() {
               className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm font-medium text-slate-300"
             >
               Exportar
-            </button>
-            <button
-              type="button"
-              className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white"
-            >
-              Atualizar lista
             </button>
           </div>
         </div>
@@ -78,22 +81,20 @@ export function EventsPage() {
                 Listagem
               </h3>
               <p className="mt-1 text-sm text-slate-500">
-                Espaço reservado para cards, tabela ou timeline detalhada.
+                Eventos ordenados do mais recente para o mais antigo.
               </p>
             </div>
           </div>
 
-          <div className="mt-5 rounded-2xl border border-dashed border-slate-700 bg-slate-950 px-5 py-16 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-800 text-slate-400">
-              i
-            </div>
-            <p className="mt-4 text-sm font-medium text-slate-300">
-              Listagem de eventos será conectada aqui
-            </p>
-            <p className="mt-2 text-sm text-slate-500">
-              Esta página já está estruturada para receber a consulta real dos
-              eventos.
-            </p>
+          <div className="mt-5">
+            <EventList
+              events={events}
+              loading={loading}
+              loadingMore={loadingMore}
+              error={error}
+              hasMore={hasMore}
+              onLoadMore={loadMore}
+            />
           </div>
         </section>
       </section>
