@@ -1,17 +1,24 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { EventFilters } from "../components/EventFilters";
 import { EventList } from "../components/EventList";
+import { EventSearch } from "../components/EventSearch";
 import { useEvents } from "../hooks/useEvents";
 import { filterEventsByType } from "../utils/eventGroups";
+import { searchEvents } from "../utils/eventSearch";
 import type { EventFilter } from "../utils/eventGroups";
 
 export function EventsPage() {
   const [activeFilter, setActiveFilter] = useState<EventFilter>("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const { events, loading, loadingMore, error, hasMore, loadMore, total } =
     useEvents({
       limit: 50,
     });
-  const filteredEvents = filterEventsByType(events, activeFilter);
+  const filteredEvents = useMemo(() => {
+    const eventsByType = filterEventsByType(events, activeFilter);
+
+    return searchEvents(eventsByType, searchTerm);
+  }, [activeFilter, events, searchTerm]);
 
   return (
     <div className="space-y-6">
@@ -53,16 +60,22 @@ export function EventsPage() {
 
       <section className="grid gap-4 lg:grid-cols-[0.8fr_1.6fr]">
         <aside className="animate-fade-in-up rounded-2xl border border-slate-800 bg-slate-900 p-5">
-          <h3 className="text-base font-semibold text-white">Filtros</h3>
-          <p className="mt-1 text-sm text-slate-500">
-            Filtre os eventos carregados nesta página.
-          </p>
+          <div className="space-y-6">
+            <EventSearch value={searchTerm} onChange={setSearchTerm} />
 
-          <div className="mt-5">
-            <EventFilters
-              activeFilter={activeFilter}
-              onFilterChange={setActiveFilter}
-            />
+            <div>
+              <h3 className="text-base font-semibold text-white">Filtros</h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Filtre os eventos carregados nesta página.
+              </p>
+
+              <div className="mt-5">
+                <EventFilters
+                  activeFilter={activeFilter}
+                  onFilterChange={setActiveFilter}
+                />
+              </div>
+            </div>
           </div>
         </aside>
 
@@ -73,7 +86,9 @@ export function EventsPage() {
                 Listagem
               </h3>
               <p className="mt-1 text-sm text-slate-500">
-                Eventos ordenados do mais recente para o mais antigo.
+                {filteredEvents.length} evento
+                {filteredEvents.length === 1 ? "" : "s"} encontrado
+                {filteredEvents.length === 1 ? "" : "s"}.
               </p>
             </div>
           </div>
