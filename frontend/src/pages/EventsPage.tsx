@@ -1,18 +1,17 @@
+import { useState } from "react";
+import { EventFilters } from "../components/EventFilters";
 import { EventList } from "../components/EventList";
 import { useEvents } from "../hooks/useEvents";
-
-const filterPlaceholders = [
-  "Tipo de evento",
-  "Período",
-  "Origem",
-  "Status",
-];
+import { filterEventsByType } from "../utils/eventGroups";
+import type { EventFilter } from "../utils/eventGroups";
 
 export function EventsPage() {
+  const [activeFilter, setActiveFilter] = useState<EventFilter>("all");
   const { events, loading, loadingMore, error, hasMore, loadMore, total } =
     useEvents({
       limit: 50,
     });
+  const filteredEvents = filterEventsByType(events, activeFilter);
 
   return (
     <div className="space-y-6">
@@ -56,21 +55,14 @@ export function EventsPage() {
         <aside className="animate-fade-in-up rounded-2xl border border-slate-800 bg-slate-900 p-5">
           <h3 className="text-base font-semibold text-white">Filtros</h3>
           <p className="mt-1 text-sm text-slate-500">
-            Controles visuais reservados para a próxima etapa.
+            Filtre os eventos carregados nesta página.
           </p>
 
-          <div className="mt-5 space-y-3">
-            {filterPlaceholders.map((filter) => (
-              <div
-                key={filter}
-                className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-3"
-              >
-                <p className="text-sm font-medium text-slate-300">{filter}</p>
-                <p className="mt-1 text-xs text-slate-600">
-                  Ainda sem lógica aplicada
-                </p>
-              </div>
-            ))}
+          <div className="mt-5">
+            <EventFilters
+              activeFilter={activeFilter}
+              onFilterChange={setActiveFilter}
+            />
           </div>
         </aside>
 
@@ -88,7 +80,7 @@ export function EventsPage() {
 
           <div className="mt-5">
             <EventList
-              events={events}
+              events={filteredEvents}
               loading={loading}
               loadingMore={loadingMore}
               error={error}
