@@ -46,6 +46,86 @@ const getPayloadValue = (payload: EventPayload, key: string) => {
   return String(value);
 };
 
+const getMercadoLivreUrl = (event: Event) => {
+  const itemId = getPayloadValue(event.payload, "item_id");
+  const orderId = getPayloadValue(event.payload, "order_id");
+
+  if (itemId !== "Não informado") {
+    return `https://www.mercadolivre.com.br/anuncios/${itemId}`;
+  }
+
+  if (orderId !== "Não informado") {
+    return `https://www.mercadolivre.com.br/vendas/${orderId}/detalhe`;
+  }
+
+  return null;
+};
+
+const copyToClipboard = async (value: string) => {
+  await navigator.clipboard.writeText(value);
+};
+
+function QuickActions({
+  event,
+  onRefresh,
+}: {
+  event: Event;
+  onRefresh: () => void;
+}) {
+  const mercadoLivreUrl = getMercadoLivreUrl(event);
+  const currentUrl = window.location.href;
+
+  return (
+    <section className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+      <h2 className="text-lg font-semibold text-white">Ações rápidas</h2>
+      <p className="mt-2 text-sm text-slate-500">
+        Atalhos preparados para futuras automações operacionais.
+      </p>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <a
+          href={mercadoLivreUrl ?? undefined}
+          target="_blank"
+          rel="noreferrer"
+          aria-disabled={!mercadoLivreUrl}
+          className={[
+            "rounded-xl border px-4 py-3 text-center text-sm font-medium transition",
+            mercadoLivreUrl
+              ? "border-slate-700 bg-slate-950 text-slate-200 hover:border-sky-500 hover:text-white"
+              : "pointer-events-none border-slate-800 bg-slate-950 text-slate-600",
+          ].join(" ")}
+        >
+          Abrir no Mercado Livre
+        </a>
+
+        <button
+          type="button"
+          onClick={() => copyToClipboard(event.id)}
+          className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-sky-500 hover:text-white"
+        >
+          Copiar ID
+        </button>
+
+        <button
+          type="button"
+          onClick={() => copyToClipboard(currentUrl)}
+          className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-sky-500 hover:text-white"
+        >
+          Copiar Link
+        </button>
+
+        <button
+          type="button"
+          onClick={onRefresh}
+          className="rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-400"
+        >
+          Atualizar
+        </button>
+      </div>
+    </section>
+  );
+}
+
 function MercadoLivreInfo({ event }: { event: Event }) {
   const items = [
     { label: "ID de origem", value: event.source_id },
@@ -82,7 +162,7 @@ function MercadoLivreInfo({ event }: { event: Event }) {
 
 export function EventDetailsPage() {
   const { id } = useParams();
-  const { event, loading, error } = useEvent(id);
+  const { event, loading, error, refetch } = useEvent(id);
 
   if (loading) {
     return (
@@ -136,6 +216,8 @@ export function EventDetailsPage() {
           </span>
         </div>
       </section>
+
+      <QuickActions event={event} onRefresh={refetch} />
 
       <section className="grid gap-4 lg:grid-cols-3">
         <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">

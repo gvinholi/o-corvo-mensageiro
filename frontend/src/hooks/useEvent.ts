@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getEventById } from "../services/events.service";
 import type { Event } from "../types/event";
 
@@ -17,28 +17,25 @@ const initialState: UseEventState = {
 export function useEvent(id: string | undefined) {
   const [state, setState] = useState<UseEventState>(initialState);
 
-  useEffect(() => {
-    if (!id) {
-      setState({
-        event: null,
-        loading: false,
-        error: "ID do evento não informado.",
-      });
-      return;
-    }
+  const fetchEvent = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!id) {
+        setState({
+          event: null,
+          loading: false,
+          error: "ID do evento não informado.",
+        });
+        return;
+      }
 
-    const eventId = id;
-    const abortController = new AbortController();
-
-    async function fetchEvent() {
-      setState({
-        event: null,
+      setState((currentState) => ({
+        ...currentState,
         loading: true,
         error: null,
-      });
+      }));
 
       try {
-        const event = await getEventById(eventId, abortController.signal);
+        const event = await getEventById(id, signal);
 
         setState({
           event,
@@ -46,7 +43,7 @@ export function useEvent(id: string | undefined) {
           error: null,
         });
       } catch (error) {
-        if (abortController.signal.aborted) {
+        if (signal?.aborted) {
           return;
         }
 
@@ -59,14 +56,31 @@ export function useEvent(id: string | undefined) {
               : "Erro desconhecido ao buscar evento.",
         });
       }
+    },
+    [id]
+  );
+
+  useEffect(() => {
+    if (!id) {
+      setState({
+        event: null,
+        loading: false,
+        error: "ID do evento não informado.",
+      });
+      return;
     }
 
-    fetchEvent();
+    const abortController = new AbortController();
+
+    fetchEvent(abortController.signal);
 
     return () => {
       abortController.abort();
     };
-  }, [id]);
+  }, [fetchEvent, id]);
 
-  return state;
+  return {
+    ...state,
+    refetch: () => fetchEvent(),
+  };
 }
